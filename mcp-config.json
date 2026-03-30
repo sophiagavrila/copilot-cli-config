@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "devportal": {
+      "type": "stdio",
+      "command": "/Users/sophiagavrila/Documents/workspace/devportal-mcp/run.sh",
+      "tools": ["*"],
+      "args": []
+    },
+    "qmd": {
+      "type": "stdio",
+      "command": "/opt/homebrew/bin/qmd",
+      "tools": ["*"],
+      "args": ["mcp"]
+    },
+    "datadog": {
+      "type": "http",
+      "url": "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp",
+      "tools": ["*"]
+    }
+  }
+}

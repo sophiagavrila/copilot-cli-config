@@ -1,0 +1,27 @@
+{
+  "banner": "never",
+  "render_markdown": true,
+  "screen_reader": false,
+  "theme": "auto",
+  "staff": true,
+  "log_level": "all",
+  "trusted_folders": [
+    "/Users/sophiagavrila/Documents/workspace",
+    "/Users/sophiagavrila/Documents/Obsidian Vault"
+  ],
+  "allowed_urls": [
+    "https://devportal.githubapp.com",
+    "https://thehub.github.com",
+    "https://docs.github.com",
+    "https://docs.slack.dev",
+    "https://code.visualstudio.com",
+    "https://github.com",
+    "https://api.github.com",
+    "https://api.githubcopilot.com",
+    "https://models.github.ai",
+    "https://mcp.datadoghq.com",
+    "https://security-findings-staging.githubapp.com"
+  ],
+  "firstLaunchAt": "2026-03-11T00:00:00.000Z",
+  "experimental": true
+}

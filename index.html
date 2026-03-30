@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copilot CLI Config &mdash; Settings Refactor Report</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149; --purple: #bc8cff;
+    --orange: #f0883e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+  h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 2.5rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; text-align: center; }
+  .stat-value { font-size: 2rem; font-weight: 700; }
+  .stat-label { color: var(--muted); font-size: 0.85rem; margin-top: 0.25rem; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.purple { color: var(--purple); }
+  .stat-value.orange { color: var(--orange); }
+  .stat-value.yellow { color: var(--yellow); }
+
+  .section { margin-bottom: 2.5rem; }
+  .section-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+  .badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .badge-new { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge-modified { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .badge-security { background: rgba(248,81,73,0.15); color: var(--red); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
+  .card-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .card-header h3 { font-size: 1rem; font-weight: 600; }
+  .card-body { padding: 1.25rem; }
+  .card-body p { color: var(--muted); margin-bottom: 0.75rem; }
+
+  .file-tree { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem; }
+  .file-tree .dir { color: var(--accent); }
+  .file-tree .file { color: var(--text); }
+  .file-tree .new { color: var(--green); }
+  .file-tree .mod { color: var(--yellow); }
+  .file-tree li { list-style: none; padding: 0.2rem 0; padding-left: 1.5rem; position: relative; }
+  .file-tree li::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 1px; background: var(--border); }
+  .file-tree li::after { content: ''; position: absolute; left: 0.5rem; top: 50%; width: 0.6rem; height: 1px; background: var(--border); }
+  .file-tree > li::before, .file-tree > li::after { display: none; }
+  .file-tree > li { padding-left: 0; }
+  .size { color: var(--muted); font-size: 0.75rem; margin-left: 0.5rem; }
+
+  .comparison-table { width: 100%; border-collapse: collapse; }
+  .comparison-table th { text-align: left; padding: 0.75rem 1rem; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+  .comparison-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .check { color: var(--green); }
+  .cross { color: var(--red); }
+  .partial { color: var(--yellow); }
+  .feature-name { font-weight: 500; }
+
+  .extension-card { display: grid; grid-template-columns: auto 1fr; gap: 1.25rem; }
+  .ext-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+  .ext-icon.lifecycle { background: linear-gradient(135deg, #1a1a2e, #16213e); border: 1px solid var(--accent); }
+  .ext-icon.tools { background: linear-gradient(135deg, #1a2e1a, #162e21); border: 1px solid var(--green); }
+  .ext-meta { display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap; }
+  .ext-meta span { font-size: 0.8rem; color: var(--muted); }
+
+  .hook-list, .tool-list { display: grid; gap: 0.5rem; margin-top: 0.75rem; }
+  .hook-item, .tool-item { background: rgba(88,166,255,0.06); border: 1px solid rgba(88,166,255,0.15); border-radius: 8px; padding: 0.6rem 0.9rem; }
+  .hook-item code, .tool-item code { color: var(--accent); font-size: 0.85rem; }
+  .hook-item .desc, .tool-item .desc { color: var(--muted); font-size: 0.8rem; margin-top: 0.2rem; }
+
+  .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .agent-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.9rem; display: flex; align-items: center; gap: 0.5rem; transition: border-color 0.2s; }
+  .agent-chip:hover { border-color: var(--accent); }
+  .agent-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .agent-dot.sec { background: var(--red); }
+  .agent-dot.eng { background: var(--accent); }
+  .agent-dot.ops { background: var(--green); }
+  .agent-dot.data { background: var(--purple); }
+  .agent-dot.other { background: var(--orange); }
+  .agent-name { font-size: 0.85rem; font-weight: 500; }
+
+  .perm-visual { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .perm-tag { padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-family: monospace; }
+  .perm-tag.write { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+  .perm-tag.cmd { background: rgba(88,166,255,0.1); color: var(--accent); border: 1px solid rgba(88,166,255,0.25); }
+  .perm-tag.mcp { background: rgba(188,140,255,0.1); color: var(--purple); border: 1px solid rgba(188,140,255,0.25); }
+
+  .flow-diagram { background: rgba(88,166,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; font-family: monospace; font-size: 0.85rem; line-height: 1.8; overflow-x: auto; white-space: pre; }
+  .flow-diagram .arrow { color: var(--accent); }
+  .flow-diagram .node { color: var(--green); }
+  .flow-diagram .label { color: var(--muted); }
+
+  .timeline { position: relative; padding-left: 2rem; }
+  .timeline::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .tl-item { position: relative; margin-bottom: 1.25rem; }
+  .tl-item::before { content: ''; position: absolute; left: -1.75rem; top: 0.5rem; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+  .tl-item.done::before { background: var(--green); }
+  .tl-title { font-weight: 600; font-size: 0.95rem; }
+  .tl-desc { color: var(--muted); font-size: 0.85rem; }
+
+  footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Copilot CLI Config Refactor</h1>
+<p class="subtitle">Autonomous self-improvement session &mdash; achieving feature parity with Claude Code. Generated 2026-03-30.</p>
+
+<!-- Stats Overview -->
+<div class="stats-grid">
+  <div class="stat-card"><div class="stat-value green">40</div><div class="stat-label">Files Created</div></div>
+  <div class="stat-card"><div class="stat-value accent">7,750</div><div class="stat-label">Lines of Instructions</div></div>
+  <div class="stat-card"><div class="stat-value purple">30</div><div class="stat-label">Agent Personas</div></div>
+  <div class="stat-card"><div class="stat-value orange">2</div><div class="stat-label">SDK Extensions</div></div>
+  <div class="stat-card"><div class="stat-value yellow">10</div><div class="stat-label">Hooks &amp; Tools</div></div>
+  <div class="stat-card"><div class="stat-value green">3</div><div class="stat-label">MCP Servers</div></div>
+</div>
+
+<!-- What Changed: Before/After -->
+<div class="section">
+  <div class="section-title">Before vs After <span class="badge badge-modified">comparison</span></div>
+  <div class="card">
+    <div class="card-body" style="padding:0;">
+      <table class="comparison-table">
+        <thead><tr><th>Feature</th><th>Before</th><th>After</th></tr></thead>
+        <tbody>
+          <tr><td class="feature-name">Custom Instructions</td><td class="cross">None</td><td class="check">134 lines &mdash; user prefs, code discipline, pipeline knowledge</td></tr>
+          <tr><td class="feature-name">Agent Personas</td><td class="cross">None</td><td class="check">30 specialized .instructions.md files (7,750 lines)</td></tr>
+          <tr><td class="feature-name">SDK Extensions</td><td class="cross">None</td><td class="check">2 extensions &mdash; session-lifecycle + workspace-tools</td></tr>
+          <tr><td class="feature-name">Session Hooks</td><td class="cross">None</td><td class="check">5 hooks: start resource check, pre/post tool guards, session logging, error retry</td></tr>
+          <tr><td class="feature-name">Custom Tools</td><td class="cross">None</td><td class="check">5 tools: log_session, qmd_search, resource_check, pane_color, screenshot</td></tr>
+          <tr><td class="feature-name">MCP Servers</td><td class="partial">2 (devportal, qmd)</td><td class="check">3 (+ datadog HTTP endpoint)</td></tr>
+          <tr><td class="feature-name">LSP Servers</td><td class="cross">None</td><td class="check">3 &mdash; pyright (Python), gopls (Go), typescript-language-server</td></tr>
+          <tr><td class="feature-name">Permissions</td><td class="partial">Basic wildcards</td><td class="check">38 granular command approvals + write + MCP</td></tr>
+          <tr><td class="feature-name">Trusted Folders</td><td class="partial">workspace only</td><td class="check">+ Obsidian Vault</td></tr>
+          <tr><td class="feature-name">Allowed URLs</td><td class="partial">8 URLs</td><td class="check">11 URLs (+ models.github.ai, datadog, staging)</td></tr>
+          <tr><td class="feature-name">Security Guards</td><td class="cross">None</td><td class="check">7 deny patterns blocking rm -rf /, sudo rm, curl|bash, force push</td></tr>
+          <tr><td class="feature-name">Auto Session Logging</td><td class="cross">None</td><td class="check">SessionEnd hook &rarr; Obsidian + QMD reindex</td></tr>
+          <tr><td class="feature-name">Watchdog Script</td><td class="cross">None</td><td class="check">Auto-approve permission prompts for autonomous loops</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- File Tree -->
+<div class="section">
+  <div class="section-title">Repository Structure <span class="badge badge-new">new repo</span></div>
+  <div class="card"><div class="card-body">
+    <ul class="file-tree">
+      <li><span class="dir">copilot-cli-config/</span>
+        <ul>
+          <li><span class="file mod">config.json</span><span class="size">741 B</span></li>
+          <li><span class="file new">copilot-instructions.md</span><span class="size">6.2 KB</span></li>
+          <li><span class="file mod">mcp-config.json</span><span class="size">461 B</span></li>
+          <li><span class="file mod">permissions-config.json</span><span class="size">4.8 KB</span></li>
+          <li><span class="file new">lsp-config.json</span><span class="size">584 B</span></li>
+          <li><span class="file new">watchdog.sh</span><span class="size">3.2 KB</span></li>
+          <li><span class="dir new">extensions/</span>
+            <ul>
+              <li><span class="dir">session-lifecycle/</span>
+                <ul><li><span class="file new">extension.mjs</span><span class="size">~6 KB</span></li></ul>
+              </li>
+              <li><span class="dir">workspace-tools/</span>
+                <ul><li><span class="file new">extension.mjs</span><span class="size">~4 KB</span></li></ul>
+              </li>
+            </ul>
+          </li>
+          <li><span class="dir new">instructions/</span><span class="size">376 KB total</span>
+            <ul>
+              <li><span class="file new">ai-data-remediation-engineer.instructions.md</span></li>
+              <li><span class="file new">ai-engineer.instructions.md</span></li>
+              <li><span class="file new">backend-architect.instructions.md</span></li>
+              <li><span class="file new">code-reviewer.instructions.md</span></li>
+              <li><span class="file new">go-security-tooling.instructions.md</span></li>
+              <li><span class="file new">python-pipeline-engineer.instructions.md</span></li>
+              <li><span class="file new">security-engineer.instructions.md</span></li>
+              <li><span class="file new">security-findings-engineer.instructions.md</span></li>
+              <li><span class="file new">vuln-mgmt-pipeline-orchestrator.instructions.md</span></li>
+              <li><span class="file new">wiz-integration-specialist.instructions.md</span></li>
+              <li><span class="file" style="color:var(--muted);">... +20 more agent personas</span></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div></div>
+</div>
+
+<!-- Extensions Deep Dive -->
+<div class="section">
+  <div class="section-title">SDK Extensions <span class="badge badge-new">new</span></div>
+
+  <div class="card" style="margin-bottom:1rem;">
+    <div class="card-header"><h3>session-lifecycle</h3><span class="badge badge-security">security hooks</span></div>
+    <div class="card-body">
+      <div class="extension-card">
+        <div class="ext-icon lifecycle">&#x1f6e1;</div>
+        <div>
+          <p>Lifecycle management extension with resource monitoring, security guards, and automatic session logging to Obsidian.</p>
+          <div class="hook-list">
+            <div class="hook-item"><code>onSessionStart</code><div class="desc">Runs resource check (CPU, hung processes, stale Docker containers, orphaned Python). Alerts if issues found.</div></div>
+            <div class="hook-item"><code>onPreToolUse</code><div class="desc">Security guard &mdash; blocks 7 dangerous command patterns: <code>rm -rf /</code>, <code>sudo rm</code>, <code>chmod -R 777</code>, <code>git push --force</code> (allows <code>--force-with-lease</code>), <code>curl|bash</code>, <code>wget|bash</code>.</div></div>
+            <div class="hook-item"><code>onPostToolUse</code><div class="desc">Reminds about dual ruff check when Python files are modified in vuln-agg repos.</div></div>
+            <div class="hook-item"><code>onSessionEnd</code><div class="desc">Logs session summary to Obsidian vault via <code>log-session.sh</code>, triggers QMD reindex. Skips trivial sessions (&lt;3 turns, &lt;120s).</div></div>
+            <div class="hook-item"><code>onErrorOccurred</code><div class="desc">Auto-retries recoverable model call failures (up to 2 retries).</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>workspace-tools</h3><span class="badge badge-new">5 tools</span></div>
+    <div class="card-body">
+      <div class="extension-card">
+        <div class="ext-icon tools">&#x1f527;</div>
+        <div>
+          <p>Custom tools that give Copilot capabilities matching Claude Code's workflow integrations.</p>
+          <div class="tool-list">
+            <div class="tool-item"><code>log_session</code><div class="desc">Log a session summary to the Obsidian vault.</div></div>
+            <div class="tool-item"><code>qmd_search</code><div class="desc">Search the QMD code index across workspace repos or a specific collection.</div></div>
+            <div class="tool-item"><code>resource_check</code><div class="desc">On-demand system resource check (CPU, memory, disk, battery).</div></div>
+            <div class="tool-item"><code>pane_color</code><div class="desc">Change the current tmux pane background color.</div></div>
+            <div class="tool-item"><code>screenshot</code><div class="desc">Capture a screenshot of an external monitor.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Agent Personas -->
+<div class="section">
+  <div class="section-title">Agent Instruction Files <span class="badge badge-new">30 personas</span></div>
+  <div class="card"><div class="card-body">
+    <p>Each file is a standalone <code>.instructions.md</code> that Copilot CLI loads via <code>COPILOT_CUSTOM_INSTRUCTIONS_DIRS</code>. Organized by domain:</p>
+    <div class="agent-grid">
+      <div class="agent-chip"><div class="agent-dot sec"></div><span class="agent-name">security-engineer</span></div>
+      <div class="agent-chip"><div class="agent-dot sec"></div><span class="agent-name">security-findings-engineer</span></div>
+      <div class="agent-chip"><div class="agent-dot sec"></div><span class="agent-name">security-compliance-analyst</span></div>
+      <div class="agent-chip"><div class="agent-dot sec"></div><span class="agent-name">threat-detection-engineer</span></div>
+      <div class="agent-chip"><div class="agent-dot sec"></div><span class="agent-name">incident-response-commander</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">go-security-tooling</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">python-pipeline-engineer</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">backend-architect</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">software-architect</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">senior-developer</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">frontend-developer</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">rapid-prototyper</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">embedded-firmware-engineer</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">solidity-smart-contract-engineer</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">mobile-app-builder</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">ai-engineer</span></div>
+      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">ai-data-remediation-engineer</span></div>
+      <div class="agent-chip"><div class="agent-dot data"></div><span class="agent-name">data-engineer</span></div>
+      <div class="agent-chip"><div class="agent-dot data"></div><span class="agent-name">database-optimizer</span></div>
+      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">sre</span></div>
+      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">devops-automator</span></div>
+      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">tmux-architect</span></div>
+      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">git-workflow-master</span></div>
+      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">vuln-mgmt-pipeline-orchestrator</span></div>
+      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">wiz-integration-specialist</span></div>
+      <div class="agent-chip"><div class="agent-dot other"></div><span class="agent-name">code-reviewer</span></div>
+      <div class="agent-chip"><div class="agent-dot other"></div><span class="agent-name">technical-writer</span></div>
+      <div class="agent-chip"><div class="agent-dot other"></div><span class="agent-name">autonomous-optimization-architect</span></div>
+      <div class="agent-chip"><div class="agent-dot other"></div><span class="agent-name">feishu-integration-developer</span></div>
+      <div class="agent-chip"><div class="agent-dot other"></div><span class="agent-name">wechat-mini-program-developer</span></div>
+    </div>
+    <div style="margin-top:1rem; display:flex; gap:1.5rem; flex-wrap:wrap; font-size:0.8rem; color:var(--muted);">
+      <span><span class="agent-dot sec" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;"></span> Security (5)</span>
+      <span><span class="agent-dot eng" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;"></span> Engineering (12)</span>
+      <span><span class="agent-dot ops" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;"></span> Operations (6)</span>
+      <span><span class="agent-dot data" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;"></span> Data (2)</span>
+      <span><span class="agent-dot other" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;"></span> Other (5)</span>
+    </div>
+  </div></div>
+</div>
+
+<!-- Permissions Visual -->
+<div class="section">
+  <div class="section-title">Permissions Map <span class="badge badge-modified">expanded</span></div>
+  <div class="card"><div class="card-body">
+    <p>38 granular command approvals organized by category:</p>
+    <div style="margin-top:1rem;">
+      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">File Operations</div>
+      <div class="perm-visual">
+        <span class="perm-tag write">write (all)</span>
+      </div>
+    </div>
+    <div style="margin-top:1rem;">
+      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">Git &amp; GitHub</div>
+      <div class="perm-visual">
+        <span class="perm-tag cmd">git log</span>
+        <span class="perm-tag cmd">git stash</span>
+        <span class="perm-tag cmd">git checkout</span>
+        <span class="perm-tag cmd">git pull</span>
+        <span class="perm-tag cmd">git add</span>
+        <span class="perm-tag cmd">git commit</span>
+        <span class="perm-tag cmd">git push</span>
+        <span class="perm-tag cmd">gh pr</span>
+        <span class="perm-tag cmd">gh issue</span>
+        <span class="perm-tag cmd">gh repo</span>
+      </div>
+    </div>
+    <div style="margin-top:1rem;">
+      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">Go Toolchain</div>
+      <div class="perm-visual">
+        <span class="perm-tag cmd">go build</span>
+        <span class="perm-tag cmd">go test</span>
+        <span class="perm-tag cmd">go run</span>
+        <span class="perm-tag cmd">go vet</span>
+        <span class="perm-tag cmd">go get</span>
+        <span class="perm-tag cmd">go mod</span>
+        <span class="perm-tag cmd">go doc</span>
+        <span class="perm-tag cmd">go install</span>
+        <span class="perm-tag cmd">go version</span>
+        <span class="perm-tag cmd">goimports</span>
+      </div>
+    </div>
+    <div style="margin-top:1rem;">
+      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">Python &amp; Tools</div>
+      <div class="perm-visual">
+        <span class="perm-tag cmd">python3</span>
+        <span class="perm-tag cmd">python</span>
+        <span class="perm-tag cmd">make</span>
+        <span class="perm-tag cmd">qmd</span>
+        <span class="perm-tag cmd">tree</span>
+        <span class="perm-tag cmd">sed</span>
+      </div>
+    </div>
+    <div style="margin-top:1rem;">
+      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">Infrastructure</div>
+      <div class="perm-visual">
+        <span class="perm-tag cmd">kubectl</span>
+        <span class="perm-tag cmd">ssh</span>
+        <span class="perm-tag cmd">lsof</span>
+        <span class="perm-tag cmd">xargs</span>
+        <span class="perm-tag cmd">copilot</span>
+        <span class="perm-tag cmd">claude</span>
+        <span class="perm-tag cmd">zsh</span>
+      </div>
+    </div>
+    <div style="margin-top:1rem;">
+      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">MCP Servers</div>
+      <div class="perm-visual">
+        <span class="perm-tag mcp">devportal:search_apps</span>
+        <span class="perm-tag mcp">devportal:get_deployment_logs</span>
+        <span class="perm-tag mcp">devportal:get_last_pipeline_run</span>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<!-- MCP + LSP -->
+<div class="section">
+  <div class="section-title">Infrastructure Integrations</div>
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+    <div class="card">
+      <div class="card-header"><h3>MCP Servers</h3><span class="badge badge-modified">+1 new</span></div>
+      <div class="card-body">
+        <div class="tool-list">
+          <div class="tool-item"><code>devportal</code><div class="desc">stdio &mdash; app deployment info, pipeline runs, environment status</div></div>
+          <div class="tool-item"><code>qmd</code><div class="desc">stdio &mdash; local search over 57K markdown docs across 20+ collections</div></div>
+          <div class="tool-item" style="border-color:rgba(63,185,80,0.3);background:rgba(63,185,80,0.06);"><code>datadog</code> <span style="color:var(--green);font-size:0.75rem;">NEW</span><div class="desc">HTTP &mdash; dashboards, monitors, logs via mcp.datadoghq.com</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>LSP Servers</h3><span class="badge badge-new">all new</span></div>
+      <div class="card-body">
+        <div class="tool-list">
+          <div class="tool-item"><code>pyright-langserver</code><div class="desc">Python type checking &mdash; .py, .pyi files</div></div>
+          <div class="tool-item"><code>gopls</code><div class="desc">Go language server &mdash; .go files</div></div>
+          <div class="tool-item"><code>typescript-language-server</code><div class="desc">TypeScript/JavaScript &mdash; .ts, .tsx, .js, .jsx files</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Implementation Timeline -->
+<div class="section">
+  <div class="section-title">Implementation Tasks</div>
+  <div class="card"><div class="card-body">
+    <div class="timeline">
+      <div class="tl-item done"><div class="tl-title">Extract Claude memory behavioral rules</div><div class="tl-desc">Mined Claude's memory files and CLAUDE.md for user preferences, feedback patterns, and code discipline rules.</div></div>
+      <div class="tl-item done"><div class="tl-title">Analyze Claude agent definitions</div><div class="tl-desc">Cataloged 30 agent persona files from ~/.claude/agents/ and superpowers skills.</div></div>
+      <div class="tl-item done"><div class="tl-title">Analyze Claude custom commands</div><div class="tl-desc">Mapped Claude slash commands and custom scripts to Copilot equivalents.</div></div>
+      <div class="tl-item done"><div class="tl-title">Analyze Claude hook scripts</div><div class="tl-desc">Ported SessionStart resource check, SessionEnd Obsidian logging, and security guards to Copilot SDK hooks.</div></div>
+      <div class="tl-item done"><div class="tl-title">Get Copilot extensions authoring guide</div><div class="tl-desc">Researched Copilot SDK extension API for hooks and custom tools.</div></div>
+      <div class="tl-item done"><div class="tl-title">Comprehensive copilot-instructions.md</div><div class="tl-desc">Created 134-line instruction file covering identity, code discipline, PR reviews, build commands, architecture, and session logging.</div></div>
+      <div class="tl-item done"><div class="tl-title">Add missing MCP servers</div><div class="tl-desc">Added Datadog HTTP MCP endpoint to match Claude's MCP integration.</div></div>
+      <div class="tl-item done"><div class="tl-title">Create SDK extensions</div><div class="tl-desc">Built session-lifecycle (5 hooks) and workspace-tools (5 custom tools) extensions.</div></div>
+      <div class="tl-item done"><div class="tl-title">Create workspace instruction files</div><div class="tl-desc">Generated 30 .instructions.md agent persona files in ~/.copilot/instructions/.</div></div>
+      <div class="tl-item done"><div class="tl-title">Update config.json</div><div class="tl-desc">Added trusted folders, allowed URLs, installed plugins registration.</div></div>
+      <div class="tl-item done"><div class="tl-title">Verify configuration</div><div class="tl-desc">Validated all JSON files, checked extension loading, confirmed tool registration.</div></div>
+    </div>
+  </div></div>
+</div>
+
+<footer>
+  Generated by Claude Code managing an autonomous Copilot CLI session &mdash; 2026-03-30 02:44 EDT<br>
+  Local repo: <code>~/Documents/workspace/copilot-cli-config/</code> &mdash; config source: <code>~/.copilot/</code>
+</footer>
+
+</div>
+</body>
+</html>

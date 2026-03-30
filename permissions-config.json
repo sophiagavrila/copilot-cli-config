@@ -1,0 +1,234 @@
+{
+  "locations": {
+    "/Users/sophiagavrila/Documents/workspace": {
+      "tool_approvals": [
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "go build"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "go test"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "go run"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "go vet"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "python3"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "go version"
+          ]
+        },
+        {
+          "kind": "mcp",
+          "serverName": "devportal",
+          "toolName": "search_apps"
+        },
+        {
+          "kind": "mcp",
+          "serverName": "devportal",
+          "toolName": "get_deployment_logs"
+        },
+        {
+          "kind": "mcp",
+          "serverName": "devportal",
+          "toolName": "get_last_pipeline_run"
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "make"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "lsof",
+            "xargs"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "npx @modelcontextprotocol/inspector"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "\"/Users/sophiagavrila/Documents/Obsidian Vault/02 - Agent Sessions/log-session.sh\""
+          ]
+        },
+        {
+          "kind": "write"
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "gh repo"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "qmd"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "python"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "gh issue"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "git log"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "claude"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "go doc"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "source",
+            "claude-which"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "zsh"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "tree"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "git stash",
+            "git checkout",
+            "git pull"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "go get"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "go mod"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "goimports"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "go install"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "~/go/bin/goimports"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "git add"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "git commit"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "git push"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "gh pr"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "kubectl"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "sed"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "ssh"
+          ]
+        },
+        {
+          "kind": "commands",
+          "commandIdentifiers": [
+            "copilot"
+          ]
+        }
+      ]
+    }
+  }
+}
