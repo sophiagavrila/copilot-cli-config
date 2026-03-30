@@ -3,412 +3,495 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Copilot CLI Config &mdash; Settings Refactor Report</title>
+<title>Copilot CLI Config — Settings Refactor Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0d1117; --surface: #161b22; --border: #30363d;
-    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
-    --green: #3fb950; --yellow: #d29922; --red: #f85149; --purple: #bc8cff;
-    --orange: #f0883e;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-  h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
-  .subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 2.5rem; }
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; text-align: center; }
-  .stat-value { font-size: 2rem; font-weight: 700; }
-  .stat-label { color: var(--muted); font-size: 0.85rem; margin-top: 0.25rem; }
-  .stat-value.green { color: var(--green); }
-  .stat-value.accent { color: var(--accent); }
-  .stat-value.purple { color: var(--purple); }
-  .stat-value.orange { color: var(--orange); }
-  .stat-value.yellow { color: var(--yellow); }
+:root {
+  --bg:#04070d;--surface:rgba(12,20,35,.7);--border:rgba(40,60,90,.35);--border-h:rgba(60,100,160,.4);
+  --text:#e2e8f0;--text2:#cbd5e1;--muted:#64748b;--dim:#475569;
+  --accent:#60a5fa;--accent2:#818cf8;--accent-s:rgba(96,165,250,.08);
+  --green:#34d399;--green-s:rgba(52,211,153,.08);--yellow:#fbbf24;--yellow-s:rgba(251,191,36,.08);
+  --red:#f87171;--red-s:rgba(248,113,113,.08);--purple:#a78bfa;--purple-s:rgba(167,139,250,.08);
+  --orange:#fb923c;--orange-s:rgba(251,146,60,.08);--cyan:#22d3ee;--pink:#f472b6;
+  --r:16px;--rs:10px;--mono:'JetBrains Mono','SF Mono',monospace;--ease:cubic-bezier(.16,1,.3,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+code,.mono{font-family:var(--mono)}
 
-  .section { margin-bottom: 2.5rem; }
-  .section-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-  .badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-  .badge-new { background: rgba(63,185,80,0.15); color: var(--green); }
-  .badge-modified { background: rgba(210,153,34,0.15); color: var(--yellow); }
-  .badge-security { background: rgba(248,81,73,0.15); color: var(--red); }
+/* BG */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+.bg-dots{position:absolute;inset:-50%;width:200%;height:200%;background-image:radial-gradient(circle at 1px 1px,rgba(96,165,250,.04) 1px,transparent 0);background-size:44px 44px;animation:drift 80s linear infinite}
+.bg-glow{position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(96,165,250,.07) 0%,transparent 60%),radial-gradient(ellipse 60% 60% at 80% 70%,rgba(139,92,246,.05) 0%,transparent 55%),radial-gradient(ellipse 50% 40% at 50% 50%,rgba(52,211,153,.03) 0%,transparent 60%);animation:aurora 25s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(44px,44px)}}
+@keyframes aurora{0%{opacity:1;transform:scale(1)}100%{opacity:.65;transform:scale(1.08) rotate(2deg)}}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.12;animation:orbF 20s ease-in-out infinite alternate}
+.orb-1{width:500px;height:500px;background:var(--accent);top:-10%;left:-5%}
+.orb-2{width:400px;height:400px;background:var(--purple);bottom:10%;right:-8%;animation-delay:-7s}
+.orb-3{width:350px;height:350px;background:var(--green);top:40%;left:50%;animation-delay:-14s}
+@keyframes orbF{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,-30px) scale(1.15)}}
 
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
-  .card-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-  .card-header h3 { font-size: 1rem; font-weight: 600; }
-  .card-body { padding: 1.25rem; }
-  .card-body p { color: var(--muted); margin-bottom: 0.75rem; }
+.page{position:relative;z-index:1}.container{max-width:1180px;margin:0 auto;padding:0 1.5rem}
 
-  .file-tree { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem; }
-  .file-tree .dir { color: var(--accent); }
-  .file-tree .file { color: var(--text); }
-  .file-tree .new { color: var(--green); }
-  .file-tree .mod { color: var(--yellow); }
-  .file-tree li { list-style: none; padding: 0.2rem 0; padding-left: 1.5rem; position: relative; }
-  .file-tree li::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 1px; background: var(--border); }
-  .file-tree li::after { content: ''; position: absolute; left: 0.5rem; top: 50%; width: 0.6rem; height: 1px; background: var(--border); }
-  .file-tree > li::before, .file-tree > li::after { display: none; }
-  .file-tree > li { padding-left: 0; }
-  .size { color: var(--muted); font-size: 0.75rem; margin-left: 0.5rem; }
+/* Reveal */
+.r{opacity:0;transform:translateY(40px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.r.v{opacity:1;transform:translateY(0)}
+.r[data-d="1"]{transition-delay:.08s}.r[data-d="2"]{transition-delay:.16s}
+.r[data-d="3"]{transition-delay:.24s}.r[data-d="4"]{transition-delay:.32s}
 
-  .comparison-table { width: 100%; border-collapse: collapse; }
-  .comparison-table th { text-align: left; padding: 0.75rem 1rem; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
-  .comparison-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
-  .comparison-table tr:last-child td { border-bottom: none; }
-  .check { color: var(--green); }
-  .cross { color: var(--red); }
-  .partial { color: var(--yellow); }
-  .feature-name { font-weight: 500; }
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:4rem 1.5rem;position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem 1rem;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(139,92,246,.08));border:1px solid rgba(96,165,250,.2);border-radius:50px;font-size:.78rem;font-weight:500;color:var(--accent);margin-bottom:2rem;letter-spacing:.03em}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+.hero h1{font-size:clamp(3rem,6vw,5rem);font-weight:900;letter-spacing:-.04em;line-height:1.08;margin-bottom:1.5rem}
+.hero h1 .l1{display:block;background:linear-gradient(135deg,#e2e8f0 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero h1 .l2{display:block;background:linear-gradient(135deg,var(--accent) 0%,var(--purple) 50%,var(--pink) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{color:var(--muted);font-size:1.15rem;max-width:620px;line-height:1.7;font-weight:400;margin-bottom:3rem}
+.hero-stats{display:flex;gap:3rem;flex-wrap:wrap;justify-content:center}
+.hero-stat{text-align:center}
+.hero-stat-val{font-family:var(--mono);font-size:2.2rem;font-weight:800}
+.hero-stat-label{font-size:.75rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:.25rem}
+.scroll-cue{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;color:var(--dim);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;animation:bob 2s ease-in-out infinite}
+.scroll-cue::after{content:'';width:1px;height:32px;background:linear-gradient(180deg,var(--dim),transparent)}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
 
-  .extension-card { display: grid; grid-template-columns: auto 1fr; gap: 1.25rem; }
-  .ext-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
-  .ext-icon.lifecycle { background: linear-gradient(135deg, #1a1a2e, #16213e); border: 1px solid var(--accent); }
-  .ext-icon.tools { background: linear-gradient(135deg, #1a2e1a, #162e21); border: 1px solid var(--green); }
-  .ext-meta { display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap; }
-  .ext-meta span { font-size: 0.8rem; color: var(--muted); }
+/* Chapter */
+.chapter{margin-bottom:6rem}.chapter-head{margin-bottom:2rem}
+.chapter-num{font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem}
+.chapter-title{font-size:2rem;font-weight:800;letter-spacing:-.03em;line-height:1.2}
+.chapter-desc{color:var(--muted);font-size:.92rem;margin-top:.5rem;max-width:700px;line-height:1.7}
+.divider{width:50px;height:2px;background:linear-gradient(90deg,var(--accent),var(--purple));margin:5rem auto;opacity:.3;border-radius:2px}
 
-  .hook-list, .tool-list { display: grid; gap: 0.5rem; margin-top: 0.75rem; }
-  .hook-item, .tool-item { background: rgba(88,166,255,0.06); border: 1px solid rgba(88,166,255,0.15); border-radius: 8px; padding: 0.6rem 0.9rem; }
-  .hook-item code, .tool-item code { color: var(--accent); font-size: 0.85rem; }
-  .hook-item .desc, .tool-item .desc { color: var(--muted); font-size: 0.8rem; margin-top: 0.2rem; }
+/* Glass */
+.g{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);transition:border-color .3s,box-shadow .4s,transform .3s;overflow:hidden}
+.g:hover{border-color:var(--border-h);box-shadow:0 8px 60px rgba(96,165,250,.04);transform:translateY(-2px)}
+.g-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.g-head h3{font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+.g-body{padding:1.5rem}
+.badge{padding:.2rem .65rem;border-radius:50px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 
-  .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
-  .agent-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.9rem; display: flex; align-items: center; gap: 0.5rem; transition: border-color 0.2s; }
-  .agent-chip:hover { border-color: var(--accent); }
-  .agent-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .agent-dot.sec { background: var(--red); }
-  .agent-dot.eng { background: var(--accent); }
-  .agent-dot.ops { background: var(--green); }
-  .agent-dot.data { background: var(--purple); }
-  .agent-dot.other { background: var(--orange); }
-  .agent-name { font-size: 0.85rem; font-weight: 500; }
+/* Pipeline */
+.pipeline{display:flex;align-items:center;justify-content:center;gap:0;padding:2.5rem 1rem;flex-wrap:wrap}
+.pn{padding:.85rem 1.3rem;border-radius:var(--rs);font-size:.8rem;font-weight:600;text-align:center;position:relative;transition:transform .3s,box-shadow .3s;white-space:nowrap}
+.pn:hover{transform:translateY(-3px) scale(1.03)}
+.pn.src{background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(96,165,250,.03));border:1px solid rgba(96,165,250,.25);color:var(--accent)}
+.pn.proc{background:linear-gradient(135deg,rgba(167,139,250,.1),rgba(167,139,250,.03));border:1px solid rgba(167,139,250,.25);color:var(--purple)}
+.pn.out{background:linear-gradient(135deg,rgba(52,211,153,.1),rgba(52,211,153,.03));border:1px solid rgba(52,211,153,.25);color:var(--green)}
+.pa{display:flex;align-items:center;padding:0 .4rem}
+.pa svg{width:28px;height:12px}
+.pa .trail{stroke:var(--dim);stroke-width:1.5;fill:none;stroke-dasharray:6 4;animation:fd 1.5s linear infinite}
+.pa .head{fill:var(--dim)}
+@keyframes fd{to{stroke-dashoffset:-20}}
+.pipe-label{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:.58rem;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);font-weight:700}
 
-  .perm-visual { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .perm-tag { padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-family: monospace; }
-  .perm-tag.write { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
-  .perm-tag.cmd { background: rgba(88,166,255,0.1); color: var(--accent); border: 1px solid rgba(88,166,255,0.25); }
-  .perm-tag.mcp { background: rgba(188,140,255,0.1); color: var(--purple); border: 1px solid rgba(188,140,255,0.25); }
+/* Comparison */
+.cmp{width:100%;border-collapse:collapse}
+.cmp th{text-align:left;padding:.6rem 1rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:700;border-bottom:1px solid var(--border)}
+.cmp td{padding:.65rem 1rem;border-bottom:1px solid rgba(40,60,90,.2);font-size:.82rem;vertical-align:middle;transition:background .2s}
+.cmp tr:hover td{background:rgba(96,165,250,.02)}
+.cmp tr:last-child td{border-bottom:none}
+.cmp-f{font-weight:600;white-space:nowrap}.cmp-b{color:var(--dim)}.cmp-a{color:var(--text2)}
+.bar{display:inline-block;height:4px;border-radius:2px;margin-left:.75rem;vertical-align:middle;transition:width 1s var(--ease);width:0}
+.v .bar{width:var(--w,60px)}
+.ico{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:.65rem;margin-right:.4rem;flex-shrink:0}
+.ico.x{background:var(--red-s);color:var(--red)}.ico.c{background:var(--green-s);color:var(--green)}.ico.p{background:var(--yellow-s);color:var(--yellow)}
 
-  .flow-diagram { background: rgba(88,166,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; font-family: monospace; font-size: 0.85rem; line-height: 1.8; overflow-x: auto; white-space: pre; }
-  .flow-diagram .arrow { color: var(--accent); }
-  .flow-diagram .node { color: var(--green); }
-  .flow-diagram .label { color: var(--muted); }
+/* Tree */
+.tree{font-family:var(--mono);font-size:.8rem;line-height:2.1}
+.ti{display:flex;align-items:center;gap:.45rem;padding:.1rem .5rem .1rem calc(var(--d,0)*1.4rem);border-radius:6px;transition:background .15s}
+.ti:hover{background:rgba(96,165,250,.04)}
+.ti-i{width:1.1rem;text-align:center;font-size:.85rem;flex-shrink:0}.ti-n{flex:1}
+.ti-n.dir{color:var(--accent);font-weight:600}.ti-n.new{color:var(--green)}.ti-n.mod{color:var(--yellow)}
+.ti-s{color:var(--dim);font-size:.68rem}
+.tb{font-size:.55rem;padding:.08rem .35rem;border-radius:3px;font-weight:700;text-transform:uppercase}
+.tb.n{background:var(--green-s);color:var(--green);border:1px solid rgba(52,211,153,.2)}
+.tb.m{background:var(--yellow-s);color:var(--yellow);border:1px solid rgba(251,191,36,.2)}
 
-  .timeline { position: relative; padding-left: 2rem; }
-  .timeline::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2px; background: var(--border); }
-  .tl-item { position: relative; margin-bottom: 1.25rem; }
-  .tl-item::before { content: ''; position: absolute; left: -1.75rem; top: 0.5rem; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
-  .tl-item.done::before { background: var(--green); }
-  .tl-title { font-weight: 600; font-size: 0.95rem; }
-  .tl-desc { color: var(--muted); font-size: 0.85rem; }
+/* Extensions */
+.ext-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:768px){.ext-grid{grid-template-columns:1fr}}
+.ext::before{content:'';display:block;height:2px}
+.ext.lc::before{background:linear-gradient(90deg,var(--accent),var(--purple))}
+.ext.wt::before{background:linear-gradient(90deg,var(--green),var(--cyan))}
+.ext-t{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+.ext-ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.ext-ic.lc{background:linear-gradient(135deg,rgba(96,165,250,.12),rgba(167,139,250,.08));border:1px solid rgba(96,165,250,.2)}
+.ext-ic.wt{background:linear-gradient(135deg,rgba(52,211,153,.12),rgba(34,211,238,.08));border:1px solid rgba(52,211,153,.2)}
+.ext-sub{font-size:.68rem;color:var(--dim);margin-top:.1rem}
+.pill{display:flex;align-items:flex-start;gap:.6rem;padding:.6rem .8rem;border-radius:var(--rs);margin-bottom:.4rem;transition:border-color .2s,background .2s}
+.pill.b{background:rgba(96,165,250,.03);border:1px solid rgba(96,165,250,.1)}
+.pill.b:hover{border-color:rgba(96,165,250,.25);background:rgba(96,165,250,.05)}
+.pill.gr{background:rgba(52,211,153,.03);border:1px solid rgba(52,211,153,.1)}
+.pill.gr:hover{border-color:rgba(52,211,153,.25);background:rgba(52,211,153,.05)}
+.pc{font-family:var(--mono);font-size:.75rem;font-weight:600;white-space:nowrap;padding-top:.05rem}
+.pill.b .pc{color:var(--accent)}.pill.gr .pc{color:var(--green)}
+.pt{font-size:.75rem;color:var(--muted);line-height:1.5}
 
-  footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+/* Deny */
+.deny-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.5rem}
+.deny{display:flex;align-items:center;gap:.5rem;padding:.5rem .7rem;background:rgba(248,113,113,.03);border:1px solid rgba(248,113,113,.12);border-radius:var(--rs);font-family:var(--mono);font-size:.72rem;color:var(--red);transition:border-color .2s}
+.deny:hover{border-color:rgba(248,113,113,.3)}
+
+/* Agents */
+.ag-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem}
+.ag-h{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.ag-d{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ag-c{margin-left:auto;color:var(--dim);font-weight:500}
+.ag{display:flex;align-items:center;gap:.5rem;padding:.4rem .6rem;border-radius:6px;font-family:var(--mono);font-size:.75rem;font-weight:500;transition:background .2s,transform .2s}
+.ag:hover{background:rgba(255,255,255,.03);transform:translateX(4px)}
+.ag::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.ag.s::before{background:var(--red);box-shadow:0 0 6px var(--red-s)}
+.ag.e::before{background:var(--accent);box-shadow:0 0 6px var(--accent-s)}
+.ag.o::before{background:var(--green);box-shadow:0 0 6px var(--green-s)}
+.ag.d::before{background:var(--purple);box-shadow:0 0 6px var(--purple-s)}
+.ag.x::before{background:var(--orange);box-shadow:0 0 6px var(--orange-s)}
+
+/* Perms */
+.pm-g{margin-bottom:1.2rem}
+.pm-l{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);font-weight:700;margin-bottom:.5rem;padding-left:.2rem}
+.pm-p{display:flex;flex-wrap:wrap;gap:.35rem}
+.pm{padding:.25rem .6rem;border-radius:5px;font-family:var(--mono);font-size:.7rem;font-weight:500;transition:transform .15s}
+.pm:hover{transform:translateY(-1px)}
+.pm.w{background:var(--green-s);color:var(--green);border:1px solid rgba(52,211,153,.18)}
+.pm.c{background:var(--accent-s);color:var(--accent);border:1px solid rgba(96,165,250,.15)}
+.pm.m{background:var(--purple-s);color:var(--purple);border:1px solid rgba(167,139,250,.15)}
+
+/* Integrations */
+.int-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:768px){.int-grid{grid-template-columns:1fr}}
+.ii{display:flex;align-items:flex-start;gap:.8rem;padding:.75rem;border-radius:var(--rs);transition:background .2s}
+.ii:hover{background:rgba(255,255,255,.02)}
+.ii-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.ii-n{font-family:var(--mono);font-size:.82rem;font-weight:600}
+.ii-d{color:var(--muted);font-size:.75rem;margin-top:.15rem}
+.ii-new{font-size:.58rem;padding:.08rem .4rem;border-radius:3px;font-weight:700;background:var(--green-s);color:var(--green);border:1px solid rgba(52,211,153,.2);text-transform:uppercase;margin-left:.4rem;vertical-align:middle}
+
+/* Timeline */
+.tl{position:relative;padding-left:3.5rem}
+.tl::before{content:'';position:absolute;left:15px;top:10px;bottom:10px;width:2px;background:linear-gradient(180deg,var(--accent),var(--purple),var(--green));border-radius:2px;opacity:.25}
+.tl-s{position:relative;margin-bottom:1.75rem;opacity:0;transform:translateX(-20px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+.tl-s.v{opacity:1;transform:translateX(0)}
+.tl-s::before{content:attr(data-n);position:absolute;left:-3.5rem;top:.15rem;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.65rem;font-weight:700;background:var(--bg);border:2px solid var(--green);color:var(--green);box-shadow:0 0 12px rgba(52,211,153,.2)}
+.tl-st{font-weight:700;font-size:.88rem;margin-bottom:.15rem}
+.tl-sd{color:var(--muted);font-size:.78rem;line-height:1.6}
+
+footer{text-align:center;padding:3rem 0 2rem;border-top:1px solid var(--border);margin-top:2rem}
+footer p{color:var(--dim);font-size:.75rem}
+footer code{color:var(--muted);font-family:var(--mono);font-size:.7rem}
+
+/* ─── Inception Section ─── */
+.inception-chain{display:flex;align-items:stretch;justify-content:center;gap:0;padding:2rem .5rem;flex-wrap:wrap}
+.in-node{flex:1;min-width:120px;max-width:170px;padding:1.1rem .8rem;text-align:center;border-radius:var(--rs);transition:transform .3s,box-shadow .3s}
+.in-node:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.in-icon{font-size:1.5rem;margin-bottom:.4rem;display:block}
+.in-label{font-weight:700;font-size:.78rem;margin-bottom:.2rem}
+.in-sub{font-size:.65rem;color:var(--muted);line-height:1.35}
+.in-node.n-user{background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,146,60,.03));border:1px solid rgba(251,191,36,.2)}.in-node.n-user .in-label{color:var(--yellow)}
+.in-node.n-claude{background:linear-gradient(135deg,rgba(251,146,60,.1),rgba(248,113,113,.05));border:1px solid rgba(251,146,60,.25)}.in-node.n-claude .in-label{color:var(--orange)}
+.in-node.n-copilot{background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(167,139,250,.05));border:1px solid rgba(96,165,250,.25)}.in-node.n-copilot .in-label{color:var(--accent)}
+.in-node.n-output{background:linear-gradient(135deg,rgba(52,211,153,.1),rgba(34,211,238,.05));border:1px solid rgba(52,211,153,.25)}.in-node.n-output .in-label{color:var(--green)}
+.in-node.n-meta{background:linear-gradient(135deg,rgba(167,139,250,.1),rgba(244,114,182,.05));border:1px solid rgba(167,139,250,.25)}.in-node.n-meta .in-label{color:var(--purple)}
+.in-arrow{display:flex;align-items:center;padding:0 .15rem}
+.in-arrow svg{width:28px;height:14px}
+.in-arrow .trail{fill:none;stroke-width:1.5;stroke-dasharray:5 3;animation:fd 1.2s linear infinite}
+.in-arrow .head{stroke:none}
+.in-arrow-label{font-size:.5rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;position:absolute;top:-12px;left:50%;transform:translateX(-50%);white-space:nowrap}
+@media(max-width:768px){.inception-chain{flex-direction:column;align-items:center}.in-arrow{transform:rotate(90deg);padding:.3rem 0}}
+
+/* Terminal mock */
+.term{border-radius:var(--r);overflow:hidden;font-family:var(--mono);font-size:.75rem;line-height:1.8;background:#08080f;border:1px solid var(--border)}
+.term-bar{display:flex;align-items:center;gap:.5rem;padding:.55rem 1rem;background:linear-gradient(180deg,#16162a,#101020);border-bottom:1px solid var(--border)}
+.term-dots{display:flex;gap:5px}.term-dots span{width:9px;height:9px;border-radius:50%}
+.term-dots .dr{background:#ff5f57}.term-dots .dy{background:#febc2e}.term-dots .dg{background:#28c840}
+.term-title{flex:1;text-align:center;font-size:.65rem;color:var(--dim);letter-spacing:.05em}
+.term-body{padding:1.2rem 1.5rem;overflow-x:auto}
+.convo{display:flex;flex-direction:column;gap:.65rem}
+.c-msg{display:flex;gap:.6rem;align-items:flex-start;max-width:92%}
+.c-msg.usr{align-self:flex-end;flex-direction:row-reverse}
+.c-msg.ai{align-self:flex-start}
+.c-av{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;font-weight:700}
+.c-av.av-u{background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,146,60,.12));border:1px solid rgba(251,191,36,.3);color:var(--yellow)}
+.c-av.av-c{background:linear-gradient(135deg,rgba(251,146,60,.2),rgba(248,113,113,.12));border:1px solid rgba(251,146,60,.3);color:var(--orange);font-size:.68rem}
+.c-bub{padding:.5rem .75rem;border-radius:10px;font-size:.78rem;line-height:1.5}
+.c-msg.usr .c-bub{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.12);color:var(--text2)}
+.c-msg.ai .c-bub{background:rgba(251,146,60,.03);border:1px solid rgba(251,146,60,.1);color:var(--muted)}
+.c-bub code{font-family:var(--mono);font-size:.7rem;padding:.05rem .3rem;background:rgba(255,255,255,.05);border-radius:3px;color:var(--accent)}
+.c-bub .prm{color:var(--green)}.c-bub .out{color:var(--dim)}.c-bub .cmt{color:#4a5568;font-style:italic}
+.c-bub .hlt{color:var(--yellow)}
+.cursor-blink{display:inline-block;width:7px;height:1em;background:var(--green);vertical-align:text-bottom;animation:bk 1s step-end infinite;margin-left:2px}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:0}}
+
+/* Meta glow border */
+.meta-glow{position:relative}
+.meta-glow::before{content:'';position:absolute;inset:-1px;border-radius:var(--r);background:linear-gradient(135deg,rgba(251,146,60,.25),rgba(167,139,250,.25),rgba(96,165,250,.25));z-index:-1;opacity:0;transition:opacity .5s;filter:blur(10px)}
+.meta-glow:hover::before{opacity:1}
+
+/* Recursion card */
+.recurse-card{text-align:center;padding:2rem 1.5rem}
+.recurse-icon{font-size:2.2rem;margin-bottom:.6rem}
+.recurse-title{font-weight:800;font-size:1.05rem;margin-bottom:.35rem;background:linear-gradient(90deg,var(--orange),var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.recurse-desc{color:var(--muted);font-size:.8rem;max-width:540px;margin:0 auto;line-height:1.6}
+.recurse-desc code{font-family:var(--mono);font-size:.72rem;color:var(--accent);padding:.05rem .25rem;background:rgba(96,165,250,.06);border-radius:3px}
 </style>
 </head>
 <body>
+<div class="bg"><div class="bg-dots"></div><div class="bg-glow"></div><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+<div class="page">
+
+<header class="hero">
+  <div class="hero-badge r"><span class="dot"></span> Autonomous Session — March 30, 2026</div>
+  <h1 class="r" data-d="1"><span class="l1">Copilot CLI</span><span class="l2">Config Refactor</span></h1>
+  <p class="hero-sub r" data-d="2">One AI session translated an entire Claude Code configuration ecosystem into Copilot CLI — 40 files, 30 specialized agent personas, and a complete hook-and-tool extension layer. Zero manual intervention.</p>
+  <div class="hero-stats r" data-d="3">
+    <div class="hero-stat"><div class="hero-stat-val" style="color:var(--green)" data-count="40">0</div><div class="hero-stat-label">Files Created</div></div>
+    <div class="hero-stat"><div class="hero-stat-val" style="color:var(--accent)" data-count="7750">0</div><div class="hero-stat-label">Lines Written</div></div>
+    <div class="hero-stat"><div class="hero-stat-val" style="color:var(--purple)" data-count="30">0</div><div class="hero-stat-label">Agent Personas</div></div>
+    <div class="hero-stat"><div class="hero-stat-val" style="color:var(--orange)" data-count="10">0</div><div class="hero-stat-label">Hooks & Tools</div></div>
+    <div class="hero-stat"><div class="hero-stat-val" style="color:var(--cyan)" data-count="3">0</div><div class="hero-stat-label">MCP Servers</div></div>
+  </div>
+  <div class="scroll-cue">Scroll</div>
+</header>
+
 <div class="container">
+<div class="divider"></div>
 
-<h1>Copilot CLI Config Refactor</h1>
-<p class="subtitle">Autonomous self-improvement session &mdash; achieving feature parity with Claude Code. Generated 2026-03-30.</p>
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Chapter 01</div><div class="chapter-title">The Translation Pipeline</div><div class="chapter-desc">Source files from Claude Code's ecosystem were analyzed, decomposed, and re-synthesized into Copilot CLI's configuration format — preserving every behavioral rule, security guard, and workflow integration.</div></div>
+  <div class="g"><div class="pipeline">
+    <div class="pn src" style="position:relative"><span class="pipe-label">Source</span>~/.claude/CLAUDE.md</div>
+    <div class="pa"><svg viewBox="0 0 28 12"><path class="trail" d="M0 6h22"/><polygon class="head" points="22,2 28,6 22,10"/></svg></div>
+    <div class="pn src">agents/*.md</div>
+    <div class="pa"><svg viewBox="0 0 28 12"><path class="trail" d="M0 6h22"/><polygon class="head" points="22,2 28,6 22,10"/></svg></div>
+    <div class="pn src">hooks/*.sh</div>
+    <div class="pa"><svg viewBox="0 0 28 12"><path class="trail" d="M0 6h22"/><polygon class="head" points="22,2 28,6 22,10"/></svg></div>
+    <div class="pn proc" style="position:relative"><span class="pipe-label">Transform</span>AI Translation</div>
+    <div class="pa"><svg viewBox="0 0 28 12"><path class="trail" d="M0 6h22"/><polygon class="head" points="22,2 28,6 22,10"/></svg></div>
+    <div class="pn out" style="position:relative"><span class="pipe-label">Output</span>~/.copilot/*</div>
+  </div></div>
+</section>
 
-<!-- Stats Overview -->
-<div class="stats-grid">
-  <div class="stat-card"><div class="stat-value green">40</div><div class="stat-label">Files Created</div></div>
-  <div class="stat-card"><div class="stat-value accent">7,750</div><div class="stat-label">Lines of Instructions</div></div>
-  <div class="stat-card"><div class="stat-value purple">30</div><div class="stat-label">Agent Personas</div></div>
-  <div class="stat-card"><div class="stat-value orange">2</div><div class="stat-label">SDK Extensions</div></div>
-  <div class="stat-card"><div class="stat-value yellow">10</div><div class="stat-label">Hooks &amp; Tools</div></div>
-  <div class="stat-card"><div class="stat-value green">3</div><div class="stat-label">MCP Servers</div></div>
-</div>
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Chapter 02</div><div class="chapter-title">Before & After</div><div class="chapter-desc">Every feature gap between Claude Code and Copilot CLI has been closed. The comparison below shows the transformation across 13 capability dimensions.</div></div>
+  <div class="g"><div class="g-body" style="padding:.5rem;">
+    <table class="cmp"><thead><tr><th style="width:180px">Feature</th><th>Before</th><th>After</th></tr></thead><tbody>
+      <tr><td class="cmp-f">Custom Instructions</td><td class="cmp-b"><span class="ico x">✕</span>None</td><td class="cmp-a"><span class="ico c">✓</span>134 lines — prefs, discipline, pipeline<span class="bar" style="--w:120px;background:var(--green)"></span></td></tr>
+      <tr><td class="cmp-f">Agent Personas</td><td class="cmp-b"><span class="ico x">✕</span>None</td><td class="cmp-a"><span class="ico c">✓</span>30 files — 7,750 lines<span class="bar" style="--w:160px;background:var(--purple)"></span></td></tr>
+      <tr><td class="cmp-f">SDK Extensions</td><td class="cmp-b"><span class="ico x">✕</span>None</td><td class="cmp-a"><span class="ico c">✓</span>2 — lifecycle + tools<span class="bar" style="--w:50px;background:var(--orange)"></span></td></tr>
+      <tr><td class="cmp-f">Session Hooks</td><td class="cmp-b"><span class="ico x">✕</span>None</td><td class="cmp-a"><span class="ico c">✓</span>5 hooks: resource, guards, logging<span class="bar" style="--w:90px;background:var(--accent)"></span></td></tr>
+      <tr><td class="cmp-f">Custom Tools</td><td class="cmp-b"><span class="ico x">✕</span>None</td><td class="cmp-a"><span class="ico c">✓</span>5 tools: session, search, sys, tmux<span class="bar" style="--w:90px;background:var(--cyan)"></span></td></tr>
+      <tr><td class="cmp-f">MCP Servers</td><td class="cmp-b"><span class="ico p">~</span>2</td><td class="cmp-a"><span class="ico c">✓</span>3 (+datadog HTTP)<span class="bar" style="--w:60px;background:var(--green)"></span></td></tr>
+      <tr><td class="cmp-f">LSP Servers</td><td class="cmp-b"><span class="ico x">✕</span>None</td><td class="cmp-a"><span class="ico c">✓</span>3 — pyright, gopls, ts-server<span class="bar" style="--w:70px;background:var(--accent)"></span></td></tr>
+      <tr><td class="cmp-f">Permissions</td><td class="cmp-b"><span class="ico p">~</span>Basic</td><td class="cmp-a"><span class="ico c">✓</span>38 granular approvals<span class="bar" style="--w:100px;background:var(--yellow)"></span></td></tr>
+      <tr><td class="cmp-f">Trusted Folders</td><td class="cmp-b"><span class="ico p">~</span>workspace</td><td class="cmp-a"><span class="ico c">✓</span>+ Obsidian Vault<span class="bar" style="--w:45px;background:var(--green)"></span></td></tr>
+      <tr><td class="cmp-f">Allowed URLs</td><td class="cmp-b"><span class="ico p">~</span>8</td><td class="cmp-a"><span class="ico c">✓</span>11 (+models, datadog, staging)<span class="bar" style="--w:55px;background:var(--accent)"></span></td></tr>
+      <tr><td class="cmp-f">Security Guards</td><td class="cmp-b"><span class="ico x">✕</span>None</td><td class="cmp-a"><span class="ico c">✓</span>7 deny patterns<span class="bar" style="--w:80px;background:var(--red)"></span></td></tr>
+      <tr><td class="cmp-f">Session Logging</td><td class="cmp-b"><span class="ico x">✕</span>None</td><td class="cmp-a"><span class="ico c">✓</span>SessionEnd → Obsidian + QMD<span class="bar" style="--w:75px;background:var(--green)"></span></td></tr>
+      <tr><td class="cmp-f">Watchdog</td><td class="cmp-b"><span class="ico x">✕</span>None</td><td class="cmp-a"><span class="ico c">✓</span>Auto-approve for autonomous loops<span class="bar" style="--w:85px;background:var(--orange)"></span></td></tr>
+    </tbody></table>
+  </div></div>
+</section>
 
-<!-- What Changed: Before/After -->
-<div class="section">
-  <div class="section-title">Before vs After <span class="badge badge-modified">comparison</span></div>
-  <div class="card">
-    <div class="card-body" style="padding:0;">
-      <table class="comparison-table">
-        <thead><tr><th>Feature</th><th>Before</th><th>After</th></tr></thead>
-        <tbody>
-          <tr><td class="feature-name">Custom Instructions</td><td class="cross">None</td><td class="check">134 lines &mdash; user prefs, code discipline, pipeline knowledge</td></tr>
-          <tr><td class="feature-name">Agent Personas</td><td class="cross">None</td><td class="check">30 specialized .instructions.md files (7,750 lines)</td></tr>
-          <tr><td class="feature-name">SDK Extensions</td><td class="cross">None</td><td class="check">2 extensions &mdash; session-lifecycle + workspace-tools</td></tr>
-          <tr><td class="feature-name">Session Hooks</td><td class="cross">None</td><td class="check">5 hooks: start resource check, pre/post tool guards, session logging, error retry</td></tr>
-          <tr><td class="feature-name">Custom Tools</td><td class="cross">None</td><td class="check">5 tools: log_session, qmd_search, resource_check, pane_color, screenshot</td></tr>
-          <tr><td class="feature-name">MCP Servers</td><td class="partial">2 (devportal, qmd)</td><td class="check">3 (+ datadog HTTP endpoint)</td></tr>
-          <tr><td class="feature-name">LSP Servers</td><td class="cross">None</td><td class="check">3 &mdash; pyright (Python), gopls (Go), typescript-language-server</td></tr>
-          <tr><td class="feature-name">Permissions</td><td class="partial">Basic wildcards</td><td class="check">38 granular command approvals + write + MCP</td></tr>
-          <tr><td class="feature-name">Trusted Folders</td><td class="partial">workspace only</td><td class="check">+ Obsidian Vault</td></tr>
-          <tr><td class="feature-name">Allowed URLs</td><td class="partial">8 URLs</td><td class="check">11 URLs (+ models.github.ai, datadog, staging)</td></tr>
-          <tr><td class="feature-name">Security Guards</td><td class="cross">None</td><td class="check">7 deny patterns blocking rm -rf /, sudo rm, curl|bash, force push</td></tr>
-          <tr><td class="feature-name">Auto Session Logging</td><td class="cross">None</td><td class="check">SessionEnd hook &rarr; Obsidian + QMD reindex</td></tr>
-          <tr><td class="feature-name">Watchdog Script</td><td class="cross">None</td><td class="check">Auto-approve permission prompts for autonomous loops</td></tr>
-        </tbody>
-      </table>
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Chapter 03</div><div class="chapter-title">Repository Structure</div><div class="chapter-desc">A new Git repository version-controls the entire Copilot CLI config — symlinked to <code style="color:var(--accent);font-size:.85rem">~/.copilot/</code> for live use.</div></div>
+  <div class="g"><div class="g-body"><div class="tree">
+    <div class="ti"><span class="ti-i">📁</span><span class="ti-n dir">copilot-cli-config/</span></div>
+    <div class="ti" style="--d:1"><span class="ti-i">📄</span><span class="ti-n mod">config.json</span><span class="tb m">mod</span><span class="ti-s">741 B</span></div>
+    <div class="ti" style="--d:1"><span class="ti-i">📝</span><span class="ti-n new">copilot-instructions.md</span><span class="tb n">new</span><span class="ti-s">6.2 KB</span></div>
+    <div class="ti" style="--d:1"><span class="ti-i">📄</span><span class="ti-n mod">mcp-config.json</span><span class="tb m">mod</span><span class="ti-s">461 B</span></div>
+    <div class="ti" style="--d:1"><span class="ti-i">📄</span><span class="ti-n mod">permissions-config.json</span><span class="tb m">mod</span><span class="ti-s">4.8 KB</span></div>
+    <div class="ti" style="--d:1"><span class="ti-i">📄</span><span class="ti-n new">lsp-config.json</span><span class="tb n">new</span><span class="ti-s">584 B</span></div>
+    <div class="ti" style="--d:1"><span class="ti-i">🔧</span><span class="ti-n new">watchdog.sh</span><span class="tb n">new</span><span class="ti-s">3.2 KB</span></div>
+    <div class="ti" style="--d:1"><span class="ti-i">📁</span><span class="ti-n dir">extensions/</span><span class="tb n">new</span></div>
+    <div class="ti" style="--d:2"><span class="ti-i">📁</span><span class="ti-n dir">session-lifecycle/</span></div>
+    <div class="ti" style="--d:3"><span class="ti-i">⚡</span><span class="ti-n new">extension.mjs</span><span class="ti-s">~6 KB</span></div>
+    <div class="ti" style="--d:2"><span class="ti-i">📁</span><span class="ti-n dir">workspace-tools/</span></div>
+    <div class="ti" style="--d:3"><span class="ti-i">🔧</span><span class="ti-n new">extension.mjs</span><span class="ti-s">~4 KB</span></div>
+    <div class="ti" style="--d:1"><span class="ti-i">📁</span><span class="ti-n dir">instructions/</span><span class="tb n">new</span><span class="ti-s">376 KB</span></div>
+    <div class="ti" style="--d:2"><span class="ti-i">🤖</span><span class="ti-n new">ai-engineer.instructions.md</span></div>
+    <div class="ti" style="--d:2"><span class="ti-i">🔒</span><span class="ti-n new">security-engineer.instructions.md</span></div>
+    <div class="ti" style="--d:2"><span class="ti-i">🐍</span><span class="ti-n new">python-pipeline-engineer.instructions.md</span></div>
+    <div class="ti" style="--d:2"><span class="ti-i">🛠</span><span class="ti-n new">go-security-tooling.instructions.md</span></div>
+    <div class="ti" style="--d:2"><span class="ti-i">🔍</span><span class="ti-n new">security-findings-engineer.instructions.md</span></div>
+    <div class="ti" style="--d:2"><span class="ti-i" style="opacity:.4">…</span><span class="ti-n" style="color:var(--dim)">+25 more agent persona files</span></div>
+  </div></div></div>
+</section>
+
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Chapter 04</div><div class="chapter-title">SDK Extensions</div><div class="chapter-desc">Two custom extensions power the session lifecycle — one guards and observes, the other extends the tool palette with workspace-native capabilities.</div></div>
+  <div class="ext-grid">
+    <div class="g ext lc"><div class="g-body">
+      <div class="ext-t"><div class="ext-ic lc">🛡</div><div><div style="font-weight:700">session-lifecycle</div><div class="ext-sub">5 hooks · security & observability</div></div></div>
+      <div class="pill b"><span class="pc">onSessionStart</span><span class="pt">CPU, hung processes, stale Docker, orphaned Python checks</span></div>
+      <div class="pill b"><span class="pc">onPreToolUse</span><span class="pt">Blocks 7 dangerous command patterns in real-time</span></div>
+      <div class="pill b"><span class="pc">onPostToolUse</span><span class="pt">Dual ruff lint reminder for vuln-agg Python files</span></div>
+      <div class="pill b"><span class="pc">onSessionEnd</span><span class="pt">Obsidian vault log + QMD reindex (skips trivial sessions)</span></div>
+      <div class="pill b"><span class="pc">onErrorOccurred</span><span class="pt">Auto-retry recoverable model failures (2× max)</span></div>
+    </div></div>
+    <div class="g ext wt"><div class="g-body">
+      <div class="ext-t"><div class="ext-ic wt">🧰</div><div><div style="font-weight:700">workspace-tools</div><div class="ext-sub">5 tools · workflow integrations</div></div></div>
+      <div class="pill gr"><span class="pc">log_session</span><span class="pt">Log session summary to the Obsidian vault</span></div>
+      <div class="pill gr"><span class="pc">qmd_search</span><span class="pt">Search QMD code index across workspace repos</span></div>
+      <div class="pill gr"><span class="pc">resource_check</span><span class="pt">On-demand CPU, memory, disk, battery check</span></div>
+      <div class="pill gr"><span class="pc">pane_color</span><span class="pt">Change tmux pane background color</span></div>
+      <div class="pill gr"><span class="pc">screenshot</span><span class="pt">Capture external monitor screenshot</span></div>
+    </div></div>
+  </div>
+</section>
+
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Chapter 05</div><div class="chapter-title">Security Guardrails</div><div class="chapter-desc">The <code style="color:var(--accent);font-size:.85rem">onPreToolUse</code> hook intercepts every shell command in real-time and blocks these dangerous patterns before execution.</div></div>
+  <div class="g"><div class="g-body">
+    <div class="deny-grid">
+      <div class="deny"><span>🚫</span>rm -rf /</div><div class="deny"><span>🚫</span>sudo rm</div>
+      <div class="deny"><span>🚫</span>chmod -R 777</div><div class="deny"><span>🚫</span>git push --force</div>
+      <div class="deny"><span>🚫</span>curl | bash</div><div class="deny"><span>🚫</span>wget | bash</div>
+      <div class="deny"><span>🚫</span>eval $(curl ...)</div>
+    </div>
+    <p style="color:var(--dim);font-size:.75rem;margin-top:1rem;font-style:italic">Note: <code style="font-size:.72rem">git push --force-with-lease</code> is explicitly allowed.</p>
+  </div></div>
+</section>
+
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Chapter 06</div><div class="chapter-title">30 Agent Personas</div><div class="chapter-desc">Each <code style="color:var(--accent);font-size:.85rem">.instructions.md</code> contains a complete specialist profile — identity, mission, deliverables, critical rules, and communication style.</div></div>
+  <div class="ag-grid">
+    <div class="g" style="padding:1.25rem"><div class="ag-h"><span class="ag-d" style="background:var(--red);box-shadow:0 0 8px rgba(248,113,113,.3)"></span> Security <span class="ag-c">5</span></div>
+      <div class="ag s">security-engineer</div><div class="ag s">security-findings-engineer</div><div class="ag s">security-compliance-analyst</div><div class="ag s">threat-detection-engineer</div><div class="ag s">incident-response-commander</div></div>
+    <div class="g" style="padding:1.25rem"><div class="ag-h"><span class="ag-d" style="background:var(--accent);box-shadow:0 0 8px rgba(96,165,250,.3)"></span> Engineering <span class="ag-c">12</span></div>
+      <div class="ag e">go-security-tooling</div><div class="ag e">python-pipeline-engineer</div><div class="ag e">backend-architect</div><div class="ag e">software-architect</div><div class="ag e">senior-developer</div><div class="ag e">frontend-developer</div><div class="ag e">rapid-prototyper</div><div class="ag e">embedded-firmware</div><div class="ag e">solidity-smart-contract</div><div class="ag e">mobile-app-builder</div><div class="ag e">ai-engineer</div><div class="ag e">ai-data-remediation</div></div>
+    <div class="g" style="padding:1.25rem"><div class="ag-h"><span class="ag-d" style="background:var(--green);box-shadow:0 0 8px rgba(52,211,153,.3)"></span> Operations <span class="ag-c">6</span></div>
+      <div class="ag o">sre</div><div class="ag o">devops-automator</div><div class="ag o">tmux-architect</div><div class="ag o">git-workflow-master</div><div class="ag o">vuln-mgmt-orchestrator</div><div class="ag o">wiz-integration-specialist</div></div>
+    <div class="g" style="padding:1.25rem"><div class="ag-h"><span class="ag-d" style="background:var(--purple);box-shadow:0 0 8px rgba(167,139,250,.3)"></span> Data & Specialist <span class="ag-c">7</span></div>
+      <div class="ag d">data-engineer</div><div class="ag d">database-optimizer</div><div class="ag x">code-reviewer</div><div class="ag x">technical-writer</div><div class="ag x">auto-optimization-architect</div><div class="ag x">feishu-integration</div><div class="ag x">wechat-mini-program</div></div>
+  </div>
+</section>
+
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Chapter 07</div><div class="chapter-title">Permissions Map</div><div class="chapter-desc">38 granular command approvals organized by category. Every command is explicitly listed — nothing runs by implicit wildcard.</div></div>
+  <div class="g"><div class="g-body">
+    <div class="pm-g"><div class="pm-l">File Operations</div><div class="pm-p"><span class="pm w">write (all)</span></div></div>
+    <div class="pm-g"><div class="pm-l">Git & GitHub</div><div class="pm-p"><span class="pm c">git log</span><span class="pm c">git stash</span><span class="pm c">git checkout</span><span class="pm c">git pull</span><span class="pm c">git add</span><span class="pm c">git commit</span><span class="pm c">git push</span><span class="pm c">gh pr</span><span class="pm c">gh issue</span><span class="pm c">gh repo</span></div></div>
+    <div class="pm-g"><div class="pm-l">Go Toolchain</div><div class="pm-p"><span class="pm c">go build</span><span class="pm c">go test</span><span class="pm c">go run</span><span class="pm c">go vet</span><span class="pm c">go get</span><span class="pm c">go mod</span><span class="pm c">go doc</span><span class="pm c">go install</span><span class="pm c">go version</span><span class="pm c">goimports</span></div></div>
+    <div class="pm-g"><div class="pm-l">Python & Tools</div><div class="pm-p"><span class="pm c">python3</span><span class="pm c">python</span><span class="pm c">make</span><span class="pm c">qmd</span><span class="pm c">tree</span><span class="pm c">sed</span></div></div>
+    <div class="pm-g"><div class="pm-l">Infrastructure</div><div class="pm-p"><span class="pm c">kubectl</span><span class="pm c">ssh</span><span class="pm c">lsof</span><span class="pm c">xargs</span><span class="pm c">copilot</span><span class="pm c">claude</span><span class="pm c">zsh</span></div></div>
+    <div class="pm-g" style="margin-bottom:0"><div class="pm-l">MCP Servers</div><div class="pm-p"><span class="pm m">devportal:search_apps</span><span class="pm m">devportal:get_deployment_logs</span><span class="pm m">devportal:get_last_pipeline_run</span></div></div>
+  </div></div>
+</section>
+
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Chapter 08</div><div class="chapter-title">Infrastructure Integrations</div><div class="chapter-desc">MCP servers provide tool access to external platforms; LSP servers enable real-time code intelligence across three primary languages.</div></div>
+  <div class="int-grid">
+    <div class="g"><div class="g-head"><h3>🔌 MCP Servers</h3><span class="badge" style="background:var(--yellow-s);color:var(--yellow)">+1 New</span></div><div class="g-body">
+      <div class="ii"><div class="ii-ic" style="background:var(--accent-s);border:1px solid rgba(96,165,250,.2)">🏭</div><div><div class="ii-n">devportal</div><div class="ii-d">stdio — app deployments, pipeline runs, env status</div></div></div>
+      <div class="ii"><div class="ii-ic" style="background:var(--purple-s);border:1px solid rgba(167,139,250,.2)">🔍</div><div><div class="ii-n">qmd</div><div class="ii-d">stdio — 57K docs across 20+ indexed collections</div></div></div>
+      <div class="ii" style="background:rgba(52,211,153,.02);border-radius:var(--rs)"><div class="ii-ic" style="background:var(--green-s);border:1px solid rgba(52,211,153,.2)">📊</div><div><div class="ii-n">datadog<span class="ii-new">New</span></div><div class="ii-d">HTTP — dashboards, monitors, logs via mcp.datadoghq.com</div></div></div>
+    </div></div>
+    <div class="g"><div class="g-head"><h3>🧠 LSP Servers</h3><span class="badge" style="background:var(--green-s);color:var(--green)">All New</span></div><div class="g-body">
+      <div class="ii"><div class="ii-ic" style="background:var(--yellow-s);border:1px solid rgba(251,191,36,.2)">🐍</div><div><div class="ii-n">pyright-langserver</div><div class="ii-d">Python type checking — .py, .pyi files</div></div></div>
+      <div class="ii"><div class="ii-ic" style="background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.2)">💠</div><div><div class="ii-n">gopls</div><div class="ii-d">Go language server — .go files</div></div></div>
+      <div class="ii"><div class="ii-ic" style="background:var(--accent-s);border:1px solid rgba(96,165,250,.2)">🟦</div><div><div class="ii-n">typescript-language-server</div><div class="ii-d">TS/JS — .ts, .tsx, .js, .jsx files</div></div></div>
+    </div></div>
+  </div>
+</section>
+
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Chapter 09</div><div class="chapter-title">Implementation Timeline</div><div class="chapter-desc">11 sequential steps executed autonomously — from initial analysis through final validation. No manual intervention required.</div></div>
+  <div class="g"><div class="g-body"><div class="tl">
+    <div class="tl-s" data-n="01"><div class="tl-st">Extract behavioral rules</div><div class="tl-sd">Mined CLAUDE.md and 40+ memory files for user preferences, feedback patterns, and code discipline rules.</div></div>
+    <div class="tl-s" data-n="02"><div class="tl-st">Catalog agent definitions</div><div class="tl-sd">Inventoried 30 agent persona files from ~/.claude/agents/ — 376 KB of specialized context.</div></div>
+    <div class="tl-s" data-n="03"><div class="tl-st">Map custom commands</div><div class="tl-sd">Translated Claude slash commands and custom scripts to Copilot equivalents where possible.</div></div>
+    <div class="tl-s" data-n="04"><div class="tl-st">Port hook scripts</div><div class="tl-sd">Converted Bash hooks (SessionStart, SessionEnd, PreToolUse) to Copilot SDK extension format.</div></div>
+    <div class="tl-s" data-n="05"><div class="tl-st">Research Copilot SDK</div><div class="tl-sd">Studied the extension authoring guide — hook registration and tool definition patterns.</div></div>
+    <div class="tl-s" data-n="06"><div class="tl-st">Write copilot-instructions.md</div><div class="tl-sd">Synthesized a 134-line global instruction file covering identity, conventions, architecture, and build commands.</div></div>
+    <div class="tl-s" data-n="07"><div class="tl-st">Register MCP servers</div><div class="tl-sd">Added Datadog HTTP MCP endpoint to match Claude's integration surface area.</div></div>
+    <div class="tl-s" data-n="08"><div class="tl-st">Build SDK extensions</div><div class="tl-sd">Implemented session-lifecycle (5 hooks) and workspace-tools (5 tools) as extension modules.</div></div>
+    <div class="tl-s" data-n="09"><div class="tl-st">Generate agent personas</div><div class="tl-sd">Created 30 .instructions.md files — each with identity, mission, deliverables, and critical rules.</div></div>
+    <div class="tl-s" data-n="10"><div class="tl-st">Update config.json</div><div class="tl-sd">Added trusted folders, allowed URLs, and registered installed plugins.</div></div>
+    <div class="tl-s" data-n="11"><div class="tl-st">Verify & validate</div><div class="tl-sd">JSON syntax validation, extension loading checks, tool registration confirmation — all green.</div></div>
+  </div></div></div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════ THE INCEPTION ═══════════════════════ -->
+<section class="chapter r">
+  <div class="chapter-head">
+    <div class="chapter-num">Chapter 10</div>
+    <div class="chapter-title">The Inception</div>
+    <div class="chapter-desc">This entire repository was generated by <strong style="color:var(--accent)">Copilot CLI</strong>, but the session that created it was orchestrated by <strong style="color:var(--orange)">Claude Code</strong>. One AI invoked another to rewrite its counterpart's configuration &mdash; then Claude came back to add this section documenting the recursion.</div>
+  </div>
+
+  <!-- Agent Orchestration Chain -->
+  <div class="g meta-glow" style="margin-bottom:1.25rem">
+    <div class="g-head"><h3>&#x1f4a1; Agent Orchestration Chain</h3><span class="badge" style="background:var(--purple-s);color:var(--purple)">Recursive</span></div>
+    <div class="inception-chain">
+      <div class="in-node n-user"><span class="in-icon">&#x1f9d1;&#x200d;&#x1f4bb;</span><div class="in-label">Sophia</div><div class="in-sub">Opens Claude Code</div></div>
+      <div class="in-arrow" style="position:relative"><span class="in-arrow-label" style="color:var(--orange)">invokes</span><svg viewBox="0 0 28 14"><path class="trail" d="M0 7h22" stroke="var(--orange)"/><polygon class="head" points="22,3 28,7 22,11" fill="var(--orange)"/></svg></div>
+      <div class="in-node n-claude"><span class="in-icon">&#x1f9e0;</span><div class="in-label">Claude Code</div><div class="in-sub">Opus 4.6 orchestrator</div></div>
+      <div class="in-arrow" style="position:relative"><span class="in-arrow-label" style="color:var(--accent)">spawns</span><svg viewBox="0 0 28 14"><path class="trail" d="M0 7h22" stroke="var(--accent)"/><polygon class="head" points="22,3 28,7 22,11" fill="var(--accent)"/></svg></div>
+      <div class="in-node n-copilot"><span class="in-icon">&#x2728;</span><div class="in-label">Copilot CLI</div><div class="in-sub">Config self-rewrite</div></div>
+      <div class="in-arrow" style="position:relative"><span class="in-arrow-label" style="color:var(--green)">produces</span><svg viewBox="0 0 28 14"><path class="trail" d="M0 7h22" stroke="var(--green)"/><polygon class="head" points="22,3 28,7 22,11" fill="var(--green)"/></svg></div>
+      <div class="in-node n-output"><span class="in-icon">&#x1f4c1;</span><div class="in-label">40 Config Files</div><div class="in-sub">Agents, hooks, tools</div></div>
+      <div class="in-arrow" style="position:relative"><span class="in-arrow-label" style="color:var(--purple)">generates</span><svg viewBox="0 0 28 14"><path class="trail" d="M0 7h22" stroke="var(--purple)"/><polygon class="head" points="22,3 28,7 22,11" fill="var(--purple)"/></svg></div>
+      <div class="in-node n-meta"><span class="in-icon">&#x1f300;</span><div class="in-label">This Report</div><div class="in-sub">Claude adds meta layer</div></div>
     </div>
   </div>
-</div>
 
-<!-- File Tree -->
-<div class="section">
-  <div class="section-title">Repository Structure <span class="badge badge-new">new repo</span></div>
-  <div class="card"><div class="card-body">
-    <ul class="file-tree">
-      <li><span class="dir">copilot-cli-config/</span>
-        <ul>
-          <li><span class="file mod">config.json</span><span class="size">741 B</span></li>
-          <li><span class="file new">copilot-instructions.md</span><span class="size">6.2 KB</span></li>
-          <li><span class="file mod">mcp-config.json</span><span class="size">461 B</span></li>
-          <li><span class="file mod">permissions-config.json</span><span class="size">4.8 KB</span></li>
-          <li><span class="file new">lsp-config.json</span><span class="size">584 B</span></li>
-          <li><span class="file new">watchdog.sh</span><span class="size">3.2 KB</span></li>
-          <li><span class="dir new">extensions/</span>
-            <ul>
-              <li><span class="dir">session-lifecycle/</span>
-                <ul><li><span class="file new">extension.mjs</span><span class="size">~6 KB</span></li></ul>
-              </li>
-              <li><span class="dir">workspace-tools/</span>
-                <ul><li><span class="file new">extension.mjs</span><span class="size">~4 KB</span></li></ul>
-              </li>
-            </ul>
-          </li>
-          <li><span class="dir new">instructions/</span><span class="size">376 KB total</span>
-            <ul>
-              <li><span class="file new">ai-data-remediation-engineer.instructions.md</span></li>
-              <li><span class="file new">ai-engineer.instructions.md</span></li>
-              <li><span class="file new">backend-architect.instructions.md</span></li>
-              <li><span class="file new">code-reviewer.instructions.md</span></li>
-              <li><span class="file new">go-security-tooling.instructions.md</span></li>
-              <li><span class="file new">python-pipeline-engineer.instructions.md</span></li>
-              <li><span class="file new">security-engineer.instructions.md</span></li>
-              <li><span class="file new">security-findings-engineer.instructions.md</span></li>
-              <li><span class="file new">vuln-mgmt-pipeline-orchestrator.instructions.md</span></li>
-              <li><span class="file new">wiz-integration-specialist.instructions.md</span></li>
-              <li><span class="file" style="color:var(--muted);">... +20 more agent personas</span></li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-    </ul>
-  </div></div>
-</div>
-
-<!-- Extensions Deep Dive -->
-<div class="section">
-  <div class="section-title">SDK Extensions <span class="badge badge-new">new</span></div>
-
-  <div class="card" style="margin-bottom:1rem;">
-    <div class="card-header"><h3>session-lifecycle</h3><span class="badge badge-security">security hooks</span></div>
-    <div class="card-body">
-      <div class="extension-card">
-        <div class="ext-icon lifecycle">&#x1f6e1;</div>
-        <div>
-          <p>Lifecycle management extension with resource monitoring, security guards, and automatic session logging to Obsidian.</p>
-          <div class="hook-list">
-            <div class="hook-item"><code>onSessionStart</code><div class="desc">Runs resource check (CPU, hung processes, stale Docker containers, orphaned Python). Alerts if issues found.</div></div>
-            <div class="hook-item"><code>onPreToolUse</code><div class="desc">Security guard &mdash; blocks 7 dangerous command patterns: <code>rm -rf /</code>, <code>sudo rm</code>, <code>chmod -R 777</code>, <code>git push --force</code> (allows <code>--force-with-lease</code>), <code>curl|bash</code>, <code>wget|bash</code>.</div></div>
-            <div class="hook-item"><code>onPostToolUse</code><div class="desc">Reminds about dual ruff check when Python files are modified in vuln-agg repos.</div></div>
-            <div class="hook-item"><code>onSessionEnd</code><div class="desc">Logs session summary to Obsidian vault via <code>log-session.sh</code>, triggers QMD reindex. Skips trivial sessions (&lt;3 turns, &lt;120s).</div></div>
-            <div class="hook-item"><code>onErrorOccurred</code><div class="desc">Auto-retries recoverable model call failures (up to 2 retries).</div></div>
-          </div>
+  <!-- Terminal Replay -->
+  <div class="g meta-glow" style="margin-bottom:1.25rem">
+    <div class="g-head"><h3>&#x1f4df; The Session That Started It All</h3><span class="badge" style="background:var(--green-s);color:var(--green)">Replay</span></div>
+    <div class="term">
+      <div class="term-bar"><div class="term-dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="term-title">Claude Code &mdash; ~/Documents/workspace</span></div>
+      <div class="term-body">
+        <div class="convo">
+          <div class="c-msg usr"><div class="c-av av-u">S</div><div class="c-bub">Copilot CLI is barely configured. Take everything from my Claude Code setup &mdash; agents, hooks, MCP servers, permissions &mdash; and create a full Copilot CLI config that matches it.</div></div>
+          <div class="c-msg ai"><div class="c-av av-c">C</div><div class="c-bub">I'll audit your Claude Code configuration, translate every component to Copilot CLI format, and build the repo from scratch. Starting with <code>~/.claude/</code> analysis...</div></div>
+          <div class="c-msg ai"><div class="c-av av-c">C</div><div class="c-bub" style="font-family:var(--mono);font-size:.72rem;background:rgba(251,146,60,.05);border-color:rgba(251,146,60,.12)">
+            <span class="cmt"># Claude reads its own config, then spawns Copilot</span><br>
+            <span style="color:var(--accent)">Agent</span>(<span class="hlt">"copilot-config-rewrite"</span>)<br><br>
+            <span class="cmt"># Copilot CLI session begins autonomously</span><br>
+            <span class="prm">copilot&gt;</span> Creating copilot-instructions.md <span class="out">&hellip; 134 lines</span><br>
+            <span class="prm">copilot&gt;</span> Generating 30 agent personas <span class="out">&hellip; 376 KB</span><br>
+            <span class="prm">copilot&gt;</span> Building SDK extensions <span class="out">&hellip; 2 modules</span><br>
+            <span class="prm">copilot&gt;</span> Registering MCP + LSP servers <span class="out">&hellip; done</span><br>
+            <span class="prm">copilot&gt;</span> Mapping 38 permission rules <span class="out">&hellip; done</span><br><br>
+            <span style="color:var(--green)">&#x2714; Session complete &mdash; 40 files, 7,750 lines</span>
+          </div></div>
+          <div class="c-msg usr"><div class="c-av av-u">S</div><div class="c-bub">Copilot is updating the index.html &mdash; can you make it even better and add a part on how I used Claude to invoke the Copilot session?</div></div>
+          <div class="c-msg ai"><div class="c-av av-c">C</div><div class="c-bub">Adding the meta layer now.<span class="cursor-blink"></span></div></div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-header"><h3>workspace-tools</h3><span class="badge badge-new">5 tools</span></div>
-    <div class="card-body">
-      <div class="extension-card">
-        <div class="ext-icon tools">&#x1f527;</div>
-        <div>
-          <p>Custom tools that give Copilot capabilities matching Claude Code's workflow integrations.</p>
-          <div class="tool-list">
-            <div class="tool-item"><code>log_session</code><div class="desc">Log a session summary to the Obsidian vault.</div></div>
-            <div class="tool-item"><code>qmd_search</code><div class="desc">Search the QMD code index across workspace repos or a specific collection.</div></div>
-            <div class="tool-item"><code>resource_check</code><div class="desc">On-demand system resource check (CPU, memory, disk, battery).</div></div>
-            <div class="tool-item"><code>pane_color</code><div class="desc">Change the current tmux pane background color.</div></div>
-            <div class="tool-item"><code>screenshot</code><div class="desc">Capture a screenshot of an external monitor.</div></div>
-          </div>
-        </div>
-      </div>
+  <!-- Recursion callout -->
+  <div class="g meta-glow">
+    <div class="recurse-card">
+      <div class="recurse-icon">&#x267e;&#xfe0f;</div>
+      <div class="recurse-title">The Recursive Loop</div>
+      <div class="recurse-desc">Claude Code read its own <code>~/.claude/</code> configuration, spawned a Copilot CLI session to translate everything, then was called back to enhance this report &mdash; adding a section about its own role in creating it. The observer became part of the observation.</div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- Agent Personas -->
-<div class="section">
-  <div class="section-title">Agent Instruction Files <span class="badge badge-new">30 personas</span></div>
-  <div class="card"><div class="card-body">
-    <p>Each file is a standalone <code>.instructions.md</code> that Copilot CLI loads via <code>COPILOT_CUSTOM_INSTRUCTIONS_DIRS</code>. Organized by domain:</p>
-    <div class="agent-grid">
-      <div class="agent-chip"><div class="agent-dot sec"></div><span class="agent-name">security-engineer</span></div>
-      <div class="agent-chip"><div class="agent-dot sec"></div><span class="agent-name">security-findings-engineer</span></div>
-      <div class="agent-chip"><div class="agent-dot sec"></div><span class="agent-name">security-compliance-analyst</span></div>
-      <div class="agent-chip"><div class="agent-dot sec"></div><span class="agent-name">threat-detection-engineer</span></div>
-      <div class="agent-chip"><div class="agent-dot sec"></div><span class="agent-name">incident-response-commander</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">go-security-tooling</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">python-pipeline-engineer</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">backend-architect</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">software-architect</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">senior-developer</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">frontend-developer</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">rapid-prototyper</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">embedded-firmware-engineer</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">solidity-smart-contract-engineer</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">mobile-app-builder</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">ai-engineer</span></div>
-      <div class="agent-chip"><div class="agent-dot eng"></div><span class="agent-name">ai-data-remediation-engineer</span></div>
-      <div class="agent-chip"><div class="agent-dot data"></div><span class="agent-name">data-engineer</span></div>
-      <div class="agent-chip"><div class="agent-dot data"></div><span class="agent-name">database-optimizer</span></div>
-      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">sre</span></div>
-      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">devops-automator</span></div>
-      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">tmux-architect</span></div>
-      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">git-workflow-master</span></div>
-      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">vuln-mgmt-pipeline-orchestrator</span></div>
-      <div class="agent-chip"><div class="agent-dot ops"></div><span class="agent-name">wiz-integration-specialist</span></div>
-      <div class="agent-chip"><div class="agent-dot other"></div><span class="agent-name">code-reviewer</span></div>
-      <div class="agent-chip"><div class="agent-dot other"></div><span class="agent-name">technical-writer</span></div>
-      <div class="agent-chip"><div class="agent-dot other"></div><span class="agent-name">autonomous-optimization-architect</span></div>
-      <div class="agent-chip"><div class="agent-dot other"></div><span class="agent-name">feishu-integration-developer</span></div>
-      <div class="agent-chip"><div class="agent-dot other"></div><span class="agent-name">wechat-mini-program-developer</span></div>
-    </div>
-    <div style="margin-top:1rem; display:flex; gap:1.5rem; flex-wrap:wrap; font-size:0.8rem; color:var(--muted);">
-      <span><span class="agent-dot sec" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;"></span> Security (5)</span>
-      <span><span class="agent-dot eng" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;"></span> Engineering (12)</span>
-      <span><span class="agent-dot ops" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;"></span> Operations (6)</span>
-      <span><span class="agent-dot data" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;"></span> Data (2)</span>
-      <span><span class="agent-dot other" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;"></span> Other (5)</span>
-    </div>
-  </div></div>
-</div>
-
-<!-- Permissions Visual -->
-<div class="section">
-  <div class="section-title">Permissions Map <span class="badge badge-modified">expanded</span></div>
-  <div class="card"><div class="card-body">
-    <p>38 granular command approvals organized by category:</p>
-    <div style="margin-top:1rem;">
-      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">File Operations</div>
-      <div class="perm-visual">
-        <span class="perm-tag write">write (all)</span>
-      </div>
-    </div>
-    <div style="margin-top:1rem;">
-      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">Git &amp; GitHub</div>
-      <div class="perm-visual">
-        <span class="perm-tag cmd">git log</span>
-        <span class="perm-tag cmd">git stash</span>
-        <span class="perm-tag cmd">git checkout</span>
-        <span class="perm-tag cmd">git pull</span>
-        <span class="perm-tag cmd">git add</span>
-        <span class="perm-tag cmd">git commit</span>
-        <span class="perm-tag cmd">git push</span>
-        <span class="perm-tag cmd">gh pr</span>
-        <span class="perm-tag cmd">gh issue</span>
-        <span class="perm-tag cmd">gh repo</span>
-      </div>
-    </div>
-    <div style="margin-top:1rem;">
-      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">Go Toolchain</div>
-      <div class="perm-visual">
-        <span class="perm-tag cmd">go build</span>
-        <span class="perm-tag cmd">go test</span>
-        <span class="perm-tag cmd">go run</span>
-        <span class="perm-tag cmd">go vet</span>
-        <span class="perm-tag cmd">go get</span>
-        <span class="perm-tag cmd">go mod</span>
-        <span class="perm-tag cmd">go doc</span>
-        <span class="perm-tag cmd">go install</span>
-        <span class="perm-tag cmd">go version</span>
-        <span class="perm-tag cmd">goimports</span>
-      </div>
-    </div>
-    <div style="margin-top:1rem;">
-      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">Python &amp; Tools</div>
-      <div class="perm-visual">
-        <span class="perm-tag cmd">python3</span>
-        <span class="perm-tag cmd">python</span>
-        <span class="perm-tag cmd">make</span>
-        <span class="perm-tag cmd">qmd</span>
-        <span class="perm-tag cmd">tree</span>
-        <span class="perm-tag cmd">sed</span>
-      </div>
-    </div>
-    <div style="margin-top:1rem;">
-      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">Infrastructure</div>
-      <div class="perm-visual">
-        <span class="perm-tag cmd">kubectl</span>
-        <span class="perm-tag cmd">ssh</span>
-        <span class="perm-tag cmd">lsof</span>
-        <span class="perm-tag cmd">xargs</span>
-        <span class="perm-tag cmd">copilot</span>
-        <span class="perm-tag cmd">claude</span>
-        <span class="perm-tag cmd">zsh</span>
-      </div>
-    </div>
-    <div style="margin-top:1rem;">
-      <div style="margin-bottom:0.75rem;font-size:0.85rem;font-weight:600;">MCP Servers</div>
-      <div class="perm-visual">
-        <span class="perm-tag mcp">devportal:search_apps</span>
-        <span class="perm-tag mcp">devportal:get_deployment_logs</span>
-        <span class="perm-tag mcp">devportal:get_last_pipeline_run</span>
-      </div>
-    </div>
-  </div></div>
-</div>
-
-<!-- MCP + LSP -->
-<div class="section">
-  <div class="section-title">Infrastructure Integrations</div>
-  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
-    <div class="card">
-      <div class="card-header"><h3>MCP Servers</h3><span class="badge badge-modified">+1 new</span></div>
-      <div class="card-body">
-        <div class="tool-list">
-          <div class="tool-item"><code>devportal</code><div class="desc">stdio &mdash; app deployment info, pipeline runs, environment status</div></div>
-          <div class="tool-item"><code>qmd</code><div class="desc">stdio &mdash; local search over 57K markdown docs across 20+ collections</div></div>
-          <div class="tool-item" style="border-color:rgba(63,185,80,0.3);background:rgba(63,185,80,0.06);"><code>datadog</code> <span style="color:var(--green);font-size:0.75rem;">NEW</span><div class="desc">HTTP &mdash; dashboards, monitors, logs via mcp.datadoghq.com</div></div>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header"><h3>LSP Servers</h3><span class="badge badge-new">all new</span></div>
-      <div class="card-body">
-        <div class="tool-list">
-          <div class="tool-item"><code>pyright-langserver</code><div class="desc">Python type checking &mdash; .py, .pyi files</div></div>
-          <div class="tool-item"><code>gopls</code><div class="desc">Go language server &mdash; .go files</div></div>
-          <div class="tool-item"><code>typescript-language-server</code><div class="desc">TypeScript/JavaScript &mdash; .ts, .tsx, .js, .jsx files</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Implementation Timeline -->
-<div class="section">
-  <div class="section-title">Implementation Tasks</div>
-  <div class="card"><div class="card-body">
-    <div class="timeline">
-      <div class="tl-item done"><div class="tl-title">Extract Claude memory behavioral rules</div><div class="tl-desc">Mined Claude's memory files and CLAUDE.md for user preferences, feedback patterns, and code discipline rules.</div></div>
-      <div class="tl-item done"><div class="tl-title">Analyze Claude agent definitions</div><div class="tl-desc">Cataloged 30 agent persona files from ~/.claude/agents/ and superpowers skills.</div></div>
-      <div class="tl-item done"><div class="tl-title">Analyze Claude custom commands</div><div class="tl-desc">Mapped Claude slash commands and custom scripts to Copilot equivalents.</div></div>
-      <div class="tl-item done"><div class="tl-title">Analyze Claude hook scripts</div><div class="tl-desc">Ported SessionStart resource check, SessionEnd Obsidian logging, and security guards to Copilot SDK hooks.</div></div>
-      <div class="tl-item done"><div class="tl-title">Get Copilot extensions authoring guide</div><div class="tl-desc">Researched Copilot SDK extension API for hooks and custom tools.</div></div>
-      <div class="tl-item done"><div class="tl-title">Comprehensive copilot-instructions.md</div><div class="tl-desc">Created 134-line instruction file covering identity, code discipline, PR reviews, build commands, architecture, and session logging.</div></div>
-      <div class="tl-item done"><div class="tl-title">Add missing MCP servers</div><div class="tl-desc">Added Datadog HTTP MCP endpoint to match Claude's MCP integration.</div></div>
-      <div class="tl-item done"><div class="tl-title">Create SDK extensions</div><div class="tl-desc">Built session-lifecycle (5 hooks) and workspace-tools (5 custom tools) extensions.</div></div>
-      <div class="tl-item done"><div class="tl-title">Create workspace instruction files</div><div class="tl-desc">Generated 30 .instructions.md agent persona files in ~/.copilot/instructions/.</div></div>
-      <div class="tl-item done"><div class="tl-title">Update config.json</div><div class="tl-desc">Added trusted folders, allowed URLs, installed plugins registration.</div></div>
-      <div class="tl-item done"><div class="tl-title">Verify configuration</div><div class="tl-desc">Validated all JSON files, checked extension loading, confirmed tool registration.</div></div>
-    </div>
-  </div></div>
-</div>
-
-<footer>
-  Generated by Claude Code managing an autonomous Copilot CLI session &mdash; 2026-03-30 02:44 EDT<br>
-  Local repo: <code>~/Documents/workspace/copilot-cli-config/</code> &mdash; config source: <code>~/.copilot/</code>
+<footer class="r">
+  <p>Generated by Copilot CLI &middot; Orchestrated by Claude Code &middot; Enhanced by the recursion</p>
+  <p style="margin-top:.35rem">2026-03-30 &mdash; <code>~/Documents/workspace/copilot-cli-config/</code></p>
 </footer>
 
-</div>
+</div></div>
+
+<script>
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('v');io.unobserve(e.target)}})},{threshold:.08,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.r,.tl-s').forEach(el=>io.observe(el));
+const cio=new IntersectionObserver(es=>{es.forEach(e=>{if(!e.isIntersecting)return;e.target.querySelectorAll('[data-count]').forEach(el=>{if(el.dataset.done)return;el.dataset.done='1';const t=+el.dataset.count,d=1800,t0=performance.now();(function s(n){const p=Math.min((n-t0)/d,1),v=1-Math.pow(1-p,4);el.textContent=Math.round(v*t).toLocaleString();if(p<1)requestAnimationFrame(s)})(t0)});cio.unobserve(e.target)})},{threshold:.3});
+document.querySelectorAll('.hero-stats').forEach(el=>cio.observe(el));
+const tio=new IntersectionObserver(es=>{es.forEach(e=>{if(!e.isIntersecting)return;e.target.querySelectorAll('.tl-s').forEach((s,i)=>{setTimeout(()=>s.classList.add('v'),i*120)});tio.unobserve(e.target)})},{threshold:.1});
+document.querySelectorAll('.tl').forEach(el=>tio.observe(el));
+let tk=false;window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(()=>{const y=window.scrollY;document.querySelectorAll('.orb').forEach((o,i)=>{o.style.transform=`translate(${Math.sin(y*.001+i*2)*20}px,${y*(.02+i*.01)*-1}px) scale(${1+Math.sin(y*.0005)*.1})`});tk=false});tk=true}});
+</script>
 </body>
 </html>
