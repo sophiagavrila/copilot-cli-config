@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autonomous Development Principles — Humans at the Edges</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#04070d;--surface:rgba(12,20,35,.7);--border:rgba(40,60,90,.35);--border-h:rgba(60,100,160,.4);
+  --text:#e2e8f0;--text2:#cbd5e1;--muted:#64748b;--dim:#475569;
+  --accent:#60a5fa;--accent2:#818cf8;--accent-s:rgba(96,165,250,.08);
+  --green:#34d399;--green-s:rgba(52,211,153,.08);--yellow:#fbbf24;--yellow-s:rgba(251,191,36,.08);
+  --red:#f87171;--red-s:rgba(248,113,113,.08);--purple:#a78bfa;--purple-s:rgba(167,139,250,.08);
+  --orange:#fb923c;--orange-s:rgba(251,146,60,.08);--cyan:#22d3ee;--pink:#f472b6;
+  --r:16px;--rs:10px;--mono:'JetBrains Mono','SF Mono',monospace;--ease:cubic-bezier(.16,1,.3,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+code,.mono{font-family:var(--mono)}
+
+/* BG */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+.bg-dots{position:absolute;inset:-50%;width:200%;height:200%;background-image:radial-gradient(circle at 1px 1px,rgba(96,165,250,.04) 1px,transparent 0);background-size:44px 44px;animation:drift 80s linear infinite}
+.bg-glow{position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(167,139,250,.07) 0%,transparent 60%),radial-gradient(ellipse 60% 60% at 80% 70%,rgba(52,211,153,.05) 0%,transparent 55%),radial-gradient(ellipse 50% 40% at 50% 50%,rgba(96,165,250,.03) 0%,transparent 60%);animation:aurora 25s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(44px,44px)}}
+@keyframes aurora{0%{opacity:1;transform:scale(1)}100%{opacity:.65;transform:scale(1.08) rotate(2deg)}}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.12;animation:orbF 20s ease-in-out infinite alternate}
+.orb-1{width:500px;height:500px;background:var(--purple);top:-10%;right:-5%}
+.orb-2{width:400px;height:400px;background:var(--green);bottom:10%;left:-8%;animation-delay:-7s}
+.orb-3{width:350px;height:350px;background:var(--accent);top:40%;left:50%;animation-delay:-14s}
+@keyframes orbF{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,-30px) scale(1.15)}}
+
+.page{position:relative;z-index:1}.container{max-width:1180px;margin:0 auto;padding:0 1.5rem}
+
+/* Reveal */
+.r{opacity:0;transform:translateY(40px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.r.v{opacity:1;transform:translateY(0)}
+.r[data-d="1"]{transition-delay:.08s}.r[data-d="2"]{transition-delay:.16s}
+.r[data-d="3"]{transition-delay:.24s}.r[data-d="4"]{transition-delay:.32s}
+
+/* Nav tabs */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:.6rem 1.5rem;display:flex;justify-content:center;gap:.5rem;background:rgba(4,7,13,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav a{padding:.4rem 1.2rem;border-radius:8px;font-size:.78rem;font-weight:600;color:var(--muted);text-decoration:none;transition:all .2s;border:1px solid transparent}
+.nav a:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.nav a.active{color:var(--accent);background:var(--accent-s);border-color:rgba(96,165,250,.2)}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:6rem 1.5rem 4rem;position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem 1rem;background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(52,211,153,.08));border:1px solid rgba(167,139,250,.2);border-radius:50px;font-size:.78rem;font-weight:500;color:var(--purple);margin-bottom:2rem;letter-spacing:.03em}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--purple);box-shadow:0 0 10px var(--purple);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+.hero h1{font-size:clamp(2.5rem,5.5vw,4.5rem);font-weight:900;letter-spacing:-.04em;line-height:1.08;margin-bottom:1.5rem}
+.hero h1 .l1{display:block;background:linear-gradient(135deg,#e2e8f0 30%,var(--purple) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero h1 .l2{display:block;font-size:clamp(1.2rem,2.5vw,2rem);font-weight:600;background:linear-gradient(135deg,var(--green) 0%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-top:.5rem}
+.hero-sub{color:var(--muted);font-size:1.1rem;max-width:640px;line-height:1.7;font-weight:400;margin-bottom:3rem}
+.scroll-cue{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;color:var(--dim);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;animation:bob 2s ease-in-out infinite}
+.scroll-cue::after{content:'';width:1px;height:32px;background:linear-gradient(180deg,var(--dim),transparent)}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+
+/* Spectrum */
+.spectrum{display:flex;align-items:stretch;border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+.spectrum-stage{flex:1;padding:1.5rem 1.2rem;text-align:center;position:relative;transition:flex .4s var(--ease),background .3s}
+.spectrum-stage:hover{flex:1.3}
+.spectrum-stage:not(:last-child){border-right:1px solid var(--border)}
+.spectrum-stage .s-num{font-family:var(--mono);font-size:.6rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem}
+.spectrum-stage .s-icon{font-size:1.8rem;margin-bottom:.5rem}
+.spectrum-stage .s-title{font-weight:700;font-size:.88rem;margin-bottom:.3rem}
+.spectrum-stage .s-desc{font-size:.72rem;color:var(--muted);line-height:1.4}
+.spectrum-stage .s-role{font-family:var(--mono);font-size:.6rem;padding:.15rem .5rem;border-radius:4px;display:inline-block;margin-top:.5rem}
+.s1{background:rgba(248,113,113,.03)}.s1 .s-title{color:var(--red)}.s1 .s-role{background:var(--red-s);color:var(--red)}
+.s2{background:rgba(251,191,36,.03)}.s2 .s-title{color:var(--yellow)}.s2 .s-role{background:var(--yellow-s);color:var(--yellow)}
+.s3{background:rgba(52,211,153,.03)}.s3 .s-title{color:var(--green)}.s3 .s-role{background:var(--green-s);color:var(--green)}
+@media(max-width:768px){.spectrum{flex-direction:column}.spectrum-stage:not(:last-child){border-right:none;border-bottom:1px solid var(--border)}}
+
+/* Chapter */
+.chapter{margin-bottom:5rem}.chapter-head{margin-bottom:2rem}
+.chapter-num{font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem}
+.chapter-title{font-size:1.8rem;font-weight:800;letter-spacing:-.03em;line-height:1.2}
+.chapter-desc{color:var(--muted);font-size:.9rem;margin-top:.5rem;max-width:700px;line-height:1.7}
+.divider{width:50px;height:2px;background:linear-gradient(90deg,var(--purple),var(--green));margin:5rem auto;opacity:.3;border-radius:2px}
+
+/* Glass */
+.g{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);transition:border-color .3s,box-shadow .4s,transform .3s;overflow:hidden}
+.g:hover{border-color:var(--border-h);box-shadow:0 8px 60px rgba(96,165,250,.04);transform:translateY(-2px)}
+.g-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.g-head h3{font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+.g-body{padding:1.5rem}
+.badge{padding:.2rem .65rem;border-radius:50px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+
+/* Principle cards */
+.principle-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:768px){.principle-grid{grid-template-columns:1fr}}
+.principle{position:relative;overflow:hidden}
+.principle::before{content:'';display:block;height:2px}
+.principle .p-num{font-family:var(--mono);font-size:3rem;font-weight:900;position:absolute;top:1rem;right:1.2rem;opacity:.06;line-height:1}
+.principle .p-icon{font-size:1.3rem;margin-bottom:.6rem;display:block}
+.principle .p-title{font-weight:700;font-size:.95rem;margin-bottom:.35rem}
+.principle .p-body{font-size:.8rem;color:var(--muted);line-height:1.6}
+.principle .p-source{font-family:var(--mono);font-size:.6rem;color:var(--dim);margin-top:.6rem;display:flex;align-items:center;gap:.35rem}
+.principle .p-source::before{content:'';width:4px;height:4px;border-radius:50%}
+.p-blue::before{background:linear-gradient(90deg,var(--accent),var(--purple))}.p-blue .p-title{color:var(--accent)}.p-blue .p-source::before{background:var(--accent)}
+.p-green::before{background:linear-gradient(90deg,var(--green),var(--cyan))}.p-green .p-title{color:var(--green)}.p-green .p-source::before{background:var(--green)}
+.p-purple::before{background:linear-gradient(90deg,var(--purple),var(--pink))}.p-purple .p-title{color:var(--purple)}.p-purple .p-source::before{background:var(--purple)}
+.p-orange::before{background:linear-gradient(90deg,var(--orange),var(--yellow))}.p-orange .p-title{color:var(--orange)}.p-orange .p-source::before{background:var(--orange)}
+.p-red::before{background:linear-gradient(90deg,var(--red),var(--orange))}.p-red .p-title{color:var(--red)}.p-red .p-source::before{background:var(--red)}
+.p-cyan::before{background:linear-gradient(90deg,var(--cyan),var(--accent))}.p-cyan .p-title{color:var(--cyan)}.p-cyan .p-source::before{background:var(--cyan)}
+
+/* Quote blocks */
+.quote{position:relative;padding:1.25rem 1.5rem 1.25rem 1.75rem;border-left:3px solid;font-size:.85rem;line-height:1.7;font-style:italic;color:var(--text2)}
+.quote::before{content:'\201C';position:absolute;top:.2rem;left:.5rem;font-size:2rem;font-style:normal;opacity:.2}
+.quote-src{font-family:var(--mono);font-size:.65rem;color:var(--dim);font-style:normal;margin-top:.5rem;display:block}
+
+/* Pattern cards */
+.pattern-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+@media(max-width:900px){.pattern-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.pattern-grid{grid-template-columns:1fr}}
+.pat{padding:1.25rem;text-align:center}
+.pat-icon{font-size:2rem;margin-bottom:.5rem}
+.pat-title{font-weight:700;font-size:.85rem;margin-bottom:.35rem}
+.pat-desc{font-size:.72rem;color:var(--muted);line-height:1.5}
+.pat-formula{font-family:var(--mono);font-size:.65rem;padding:.3rem .6rem;border-radius:6px;background:rgba(255,255,255,.03);border:1px solid var(--border);margin-top:.5rem;display:inline-block;color:var(--accent)}
+
+/* Terminal */
+.term{border-radius:var(--r);overflow:hidden;font-family:var(--mono);font-size:.75rem;line-height:1.8;background:#08080f;border:1px solid var(--border)}
+.term-bar{display:flex;align-items:center;gap:.5rem;padding:.55rem 1rem;background:linear-gradient(180deg,#16162a,#101020);border-bottom:1px solid var(--border)}
+.term-dots{display:flex;gap:5px}.term-dots span{width:9px;height:9px;border-radius:50%}
+.term-dots .dr{background:#ff5f57}.term-dots .dy{background:#febc2e}.term-dots .dg{background:#28c840}
+.term-title{flex:1;text-align:center;font-size:.65rem;color:var(--dim);letter-spacing:.05em}
+.term-body{padding:1.2rem 1.5rem;overflow-x:auto}
+.prm{color:var(--green)}.cmt{color:#4a5568;font-style:italic}.hlt{color:var(--yellow)}.out{color:var(--dim)}
+
+/* Loop diagram */
+.loop-visual{display:flex;align-items:center;justify-content:center;gap:0;padding:2rem 1rem;flex-wrap:wrap}
+.loop-node{padding:.9rem 1.1rem;border-radius:var(--rs);font-size:.78rem;font-weight:600;text-align:center;border:1px solid;transition:transform .3s}
+.loop-node:hover{transform:translateY(-3px)}
+.loop-arrow{padding:0 .3rem;color:var(--dim);font-size:1.2rem}
+.loop-arrow svg{width:24px;height:12px}
+.loop-arrow .trail{fill:none;stroke-width:1.5;stroke-dasharray:5 3;animation:fd 1.2s linear infinite}
+@keyframes fd{to{stroke-dashoffset:-10}}
+
+/* Failure modes */
+.fail-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+@media(max-width:600px){.fail-grid{grid-template-columns:1fr}}
+.fail{display:flex;gap:.75rem;padding:.85rem 1rem;border-radius:var(--rs);background:rgba(248,113,113,.02);border:1px solid rgba(248,113,113,.1);transition:border-color .2s}
+.fail:hover{border-color:rgba(248,113,113,.25)}
+.fail-icon{font-size:1.2rem;flex-shrink:0;padding-top:.1rem}
+.fail-title{font-weight:600;font-size:.8rem;color:var(--red);margin-bottom:.15rem}
+.fail-fix{font-size:.72rem;color:var(--muted);line-height:1.4}
+.fail-fix strong{color:var(--green);font-weight:600}
+
+/* Download bar */
+.dl-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.5rem;background:linear-gradient(135deg,rgba(52,211,153,.06),rgba(96,165,250,.04));border:1px solid rgba(52,211,153,.2);border-radius:var(--r);flex-wrap:wrap}
+.dl-bar-text{font-size:.85rem;font-weight:600}
+.dl-bar-sub{font-size:.72rem;color:var(--muted);margin-top:.15rem}
+.dl-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.2rem;background:linear-gradient(135deg,var(--green),rgba(34,211,238,.8));color:#04070d;font-weight:700;font-size:.78rem;border-radius:8px;text-decoration:none;transition:transform .2s,box-shadow .2s;border:none;cursor:pointer}
+.dl-btn:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(52,211,153,.3)}
+
+/* Stats bar */
+.stat-bar{display:flex;gap:2.5rem;justify-content:center;flex-wrap:wrap;margin:2rem 0}
+.sb{text-align:center}
+.sb-val{font-family:var(--mono);font-size:1.6rem;font-weight:800}
+.sb-label{font-size:.68rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:.15rem}
+
+footer{text-align:center;padding:3rem 0 2rem;border-top:1px solid var(--border);margin-top:2rem}
+footer p{color:var(--dim);font-size:.75rem}
+footer a{color:var(--accent);text-decoration:none}footer a:hover{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="bg"><div class="bg-dots"></div><div class="bg-glow"></div><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+
+<nav class="nav">
+  <a href="index.html">Config Refactor</a>
+  <a href="principles.html" class="active">Autonomous Principles</a>
+</nav>
+
+<div class="page">
+
+<header class="hero">
+  <div class="hero-badge r"><span class="dot"></span> Distilled from Anthropic Research + Field Practice</div>
+  <h1 class="r" data-d="1"><span class="l1">Humans at the Edges</span><span class="l2">Principles for 100% Autonomous Development</span></h1>
+  <p class="hero-sub r" data-d="2">A synthesis of Anthropic's published research on agent autonomy, context engineering, and safe long-running agents &mdash; combined with hard-won patterns from real production usage. The playbook for letting AI do the work while you do the thinking.</p>
+  <div class="stat-bar r" data-d="3">
+    <div class="sb"><div class="sb-val" style="color:var(--purple)">8</div><div class="sb-label">Anthropic Sources</div></div>
+    <div class="sb"><div class="sb-val" style="color:var(--green)">12</div><div class="sb-label">Core Principles</div></div>
+    <div class="sb"><div class="sb-val" style="color:var(--orange)">5</div><div class="sb-label">Failure Modes</div></div>
+    <div class="sb"><div class="sb-val" style="color:var(--accent)">3</div><div class="sb-label">Agent Patterns</div></div>
+  </div>
+  <div class="scroll-cue">Scroll</div>
+</header>
+
+<div class="container">
+
+<!-- ═══ DOWNLOAD BAR ═══ -->
+<div class="dl-bar r" style="margin-bottom:4rem">
+  <div>
+    <div class="dl-bar-text">Get the full reference as Markdown</div>
+    <div class="dl-bar-sub">Drop it into your CLAUDE.md, AGENTS.md, or copilot-instructions.md &mdash; works with any agent harness.</div>
+  </div>
+  <a href="autonomous-principles.md" download class="dl-btn">&#x2B07; Download .md</a>
+</div>
+
+<!-- ═══ THE SPECTRUM ═══ -->
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">The Spectrum</div><div class="chapter-title">Three Stages of AI Work</div><div class="chapter-desc">Each stage represents a fundamentally different relationship between human and AI. The goal: move right without losing control.</div></div>
+  <div class="spectrum">
+    <div class="spectrum-stage s1">
+      <div class="s-num">Stage 1</div><div class="s-icon">&#x1f4dd;</div>
+      <div class="s-title">Vibe Coding</div>
+      <div class="s-desc">Human prompts. AI writes. Human reviews every line.</div>
+      <div class="s-role">Writer</div>
+    </div>
+    <div class="spectrum-stage s2">
+      <div class="s-num">Stage 2</div><div class="s-icon">&#x1f3ac;</div>
+      <div class="s-title">Agentic Engineering</div>
+      <div class="s-desc">Human orchestrates. Agents execute. Human directs.</div>
+      <div class="s-role">Director</div>
+    </div>
+    <div class="spectrum-stage s3">
+      <div class="s-num">Stage 3</div><div class="s-icon">&#x1f9ec;</div>
+      <div class="s-title">Independent Research</div>
+      <div class="s-desc">Human sets goal. Agent runs autonomously. Human reviews results.</div>
+      <div class="s-role">Principal Investigator</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 12 PRINCIPLES ═══ -->
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Core Framework</div><div class="chapter-title">The 12 Principles</div><div class="chapter-desc">Distilled from Anthropic's research papers, engineering blogs, and the Advanced Claude Code reference. Each principle is sourced to its origin.</div></div>
+  <div class="principle-grid">
+
+    <div class="g principle p-green"><div class="g-body"><span class="p-num">01</span>
+      <span class="p-icon">&#x2705;</span>
+      <div class="p-title">Verification Is the Highest-Leverage Investment</div>
+      <div class="p-body">Give agents tests, screenshots, linters, or scripts to self-check. Without verification, <strong>you</strong> are the only feedback loop. This is the single most important thing you can do.</div>
+      <div class="p-source">Anthropic &mdash; Best Practices for Claude Code</div>
+    </div></div>
+
+    <div class="g principle p-blue"><div class="g-body"><span class="p-num">02</span>
+      <span class="p-icon">&#x1f9e0;</span>
+      <div class="p-title">Context Is the Fundamental Constraint</div>
+      <div class="p-body">LLM performance degrades as the context window fills. Manage it aggressively: <code>/clear</code> between tasks, subagents for exploration, compact when needed, structured notes outside the window.</div>
+      <div class="p-source">Anthropic &mdash; Context Engineering for AI Agents</div>
+    </div></div>
+
+    <div class="g principle p-purple"><div class="g-body"><span class="p-num">03</span>
+      <span class="p-icon">&#x1f5fa;</span>
+      <div class="p-title">Explore, Plan, Then Implement</div>
+      <div class="p-body">Separate research and planning from execution to avoid solving the wrong problem. Planning is most valuable when the change modifies multiple files or when you're unfamiliar with the code.</div>
+      <div class="p-source">Anthropic &mdash; Best Practices for Claude Code</div>
+    </div></div>
+
+    <div class="g principle p-orange"><div class="g-body"><span class="p-num">04</span>
+      <span class="p-icon">&#x1f4dc;</span>
+      <div class="p-title">CLAUDE.md Is Code, Not Documentation</div>
+      <div class="p-body">Under 200 lines. Remove anything the agent infers by reading code. Include only what would cause mistakes if missing. Review it when things go wrong. This file achieves ~45x compression ratio of your workspace.</div>
+      <div class="p-source">Advanced Claude Code Reference &mdash; Section 1</div>
+    </div></div>
+
+    <div class="g principle p-cyan"><div class="g-body"><span class="p-num">05</span>
+      <span class="p-icon">&#x1f504;</span>
+      <div class="p-title">The Infinity Loop: Build, Learn, Compress</div>
+      <div class="p-body">Two loops compound: the <strong>local loop</strong> (plan &rarr; build &rarr; learn &rarr; update CLAUDE.md) shaves ~10% per cycle. The <strong>global loop</strong> (<code>/insights</code> &rarr; review &rarr; distill) improves all future projects.</div>
+      <div class="p-source">Advanced Claude Code Reference &mdash; Section 3</div>
+    </div></div>
+
+    <div class="g principle p-red"><div class="g-body"><span class="p-num">06</span>
+      <span class="p-icon">&#x1f6e1;</span>
+      <div class="p-title">The Harness Is Your Last Line of Defense</div>
+      <div class="p-body">LLMs are text-in, text-out. The harness (permissions, hooks, deny rules) is what prevents catastrophe. One real example: an agent bypassed shell policy by rewriting <code>rm -rf</code> in Python.</div>
+      <div class="p-source">Advanced Claude Code Reference &mdash; Section 4</div>
+    </div></div>
+
+    <div class="g principle p-green"><div class="g-body"><span class="p-num">07</span>
+      <span class="p-icon">&#x1f3af;</span>
+      <div class="p-title">Trust Builds Progressively</div>
+      <div class="p-body">New users approve 20% automatically. Experienced users approve 40%+. The shift is from action-by-action approval to <strong>monitoring-based oversight</strong>. Auto mode and sandboxing enable this safely.</div>
+      <div class="p-source">Anthropic &mdash; Measuring Agent Autonomy in Practice</div>
+    </div></div>
+
+    <div class="g principle p-blue"><div class="g-body"><span class="p-num">08</span>
+      <span class="p-icon">&#x1f916;</span>
+      <div class="p-title">Agents Should Self-Limit</div>
+      <div class="p-body">Claude asks clarification questions more often than humans interrupt it. Self-initiated oversight is a critical safety property. The best agents recognize uncertainty rather than blindly attempting everything.</div>
+      <div class="p-source">Anthropic &mdash; Measuring Agent Autonomy in Practice</div>
+    </div></div>
+
+    <div class="g principle p-purple"><div class="g-body"><span class="p-num">09</span>
+      <span class="p-icon">&#x1f4be;</span>
+      <div class="p-title">Git Commits + Progress Files + Init Scripts</div>
+      <div class="p-body">The harness pattern for long-running agents. <code>init.sh</code> prevents wasted startup time. <code>progress.txt</code> maintains state across sessions. Git commits create natural checkpoints. This prevents all four common failure modes.</div>
+      <div class="p-source">Anthropic &mdash; Effective Harnesses for Long-Running Agents</div>
+    </div></div>
+
+    <div class="g principle p-orange"><div class="g-body"><span class="p-num">10</span>
+      <span class="p-icon">&#x1f50d;</span>
+      <div class="p-title">Writer/Reviewer Separation</div>
+      <div class="p-body">A fresh agent with no authoring context catches bugs the builder never will. Spawn QA as a separate session &mdash; no shared context, no authoring bias. Iterate until zero issues returned.</div>
+      <div class="p-source">Advanced Claude Code Reference &mdash; Section 7</div>
+    </div></div>
+
+    <div class="g principle p-cyan"><div class="g-body"><span class="p-num">11</span>
+      <span class="p-icon">&#x26a1;</span>
+      <div class="p-title">Parallelize for Quality, Not Just Speed</div>
+      <div class="p-body">Shorter contexts per agent = better output. Three runs of the same prompt yield ~2.5x unique answers. Fan-out with cheap models for research, synthesize with Opus. 40% time savings is just the beginning.</div>
+      <div class="p-source">Advanced Claude Code Reference &mdash; Section 5</div>
+    </div></div>
+
+    <div class="g principle p-red"><div class="g-body"><span class="p-num">12</span>
+      <span class="p-icon">&#x1f3db;</span>
+      <div class="p-title">Human Role: Orchestration, Not Implementation</div>
+      <div class="p-body">The goal isn't to remove humans from the loop &mdash; it's to make human expertise count where it matters most. Define problems worth solving. Let AI handle tactical implementation. You review, direct, validate.</div>
+      <div class="p-source">Anthropic &mdash; 2026 Agentic Coding Trends Report</div>
+    </div></div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ AGENT PATTERNS ═══ -->
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Execution</div><div class="chapter-title">Three Agent Patterns That Work</div><div class="chapter-desc">From the Advanced Claude Code course and Anthropic's own engineering team. Simple, composable, proven at scale.</div></div>
+  <div class="pattern-grid">
+    <div class="g pat">
+      <div class="pat-icon">&#x1f4e1;</div>
+      <div class="pat-title" style="color:var(--accent)">Fan-Out / Fan-In</div>
+      <div class="pat-desc">Spawn N research agents (Sonnet, cheap). Each investigates independently. Synthesize with Opus. Best for research, API discovery, competitor analysis.</div>
+      <div class="pat-formula">N &times; Sonnet &rarr; 1 &times; Opus</div>
+    </div>
+    <div class="g pat">
+      <div class="pat-icon">&#x1f3b2;</div>
+      <div class="pat-title" style="color:var(--purple)">Stochastic Consensus</div>
+      <div class="pat-desc">Same prompt to N agents. Aggregate by frequency. High frequency = consensus. Low frequency = novel ideas worth exploring.</div>
+      <div class="pat-formula">mode(A,B,C) = confidence</div>
+    </div>
+    <div class="g pat">
+      <div class="pat-icon">&#x1f3ed;</div>
+      <div class="pat-title" style="color:var(--green)">Pipeline Handoff</div>
+      <div class="pat-desc">Agent A (dev) &rarr; Agent B (QA) &rarr; Agent C (review). Fresh context per stage. Best for build-test-review cycles.</div>
+      <div class="pat-formula">dev &rarr; qa &rarr; review</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ THE AUTO-RESEARCH LOOP ═══ -->
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">The Engine</div><div class="chapter-title">Auto-Research: 1,440 Experiments/Day</div><div class="chapter-desc">Based on Andrej Karpathy's approach. Three requirements: a metric, a change method, and a fast assessment. At 30s change + 30s assessment = 1 experiment/minute.</div></div>
+  <div class="g" style="margin-bottom:1.5rem">
+    <div class="g-body">
+      <div class="loop-visual">
+        <div class="loop-node" style="background:rgba(167,139,250,.08);border-color:rgba(167,139,250,.25);color:var(--purple)">Hypothesize</div>
+        <div class="loop-arrow"><svg viewBox="0 0 24 12"><path class="trail" d="M0 6h18" stroke="var(--purple)"/><polygon points="18,2 24,6 18,10" fill="var(--purple)"/></svg></div>
+        <div class="loop-node" style="background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.25);color:var(--accent)">Execute Change</div>
+        <div class="loop-arrow"><svg viewBox="0 0 24 12"><path class="trail" d="M0 6h18" stroke="var(--accent)"/><polygon points="18,2 24,6 18,10" fill="var(--accent)"/></svg></div>
+        <div class="loop-node" style="background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25);color:var(--yellow)">Assess</div>
+        <div class="loop-arrow"><svg viewBox="0 0 24 12"><path class="trail" d="M0 6h18" stroke="var(--yellow)"/><polygon points="18,2 24,6 18,10" fill="var(--yellow)"/></svg></div>
+        <div class="loop-node" style="background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.25);color:var(--green)">Keep or Revert</div>
+        <div class="loop-arrow"><svg viewBox="0 0 24 12"><path class="trail" d="M0 6h18" stroke="var(--green)"/><polygon points="18,2 24,6 18,10" fill="var(--green)"/></svg></div>
+        <div class="loop-node" style="background:rgba(251,146,60,.08);border-color:rgba(251,146,60,.25);color:var(--orange)">Log &amp; Repeat</div>
+      </div>
+    </div>
+  </div>
+  <div class="g">
+    <div class="g-body" style="text-align:center;padding:1.5rem">
+      <div class="quote" style="border-color:var(--green);text-align:left;max-width:600px;margin:0 auto">
+        Shopify CEO Tobi Lutke ran auto-research on Shopify's Liquid codebase: <strong style="color:var(--green)">53% faster</strong> parse+render, <strong style="color:var(--green)">61% fewer</strong> object allocations. Fully autonomous.
+        <span class="quote-src">Advanced Claude Code Reference &mdash; Section 9</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ FAILURE MODES ═══ -->
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Anti-Patterns</div><div class="chapter-title">Five Failure Modes to Avoid</div><div class="chapter-desc">The most common ways autonomous sessions go wrong, and their fixes. From both Anthropic's docs and the Advanced Claude Code course.</div></div>
+  <div class="fail-grid">
+    <div class="fail">
+      <div class="fail-icon">&#x1f4a5;</div>
+      <div><div class="fail-title">Kitchen Sink Session</div><div class="fail-fix">Mixing unrelated tasks. Context fills with irrelevant noise. <strong>Fix: /clear between tasks.</strong></div></div>
+    </div>
+    <div class="fail">
+      <div class="fail-icon">&#x1f300;</div>
+      <div><div class="fail-title">Correction Spiral</div><div class="fail-fix">Correcting over and over pollutes context with failures. <strong>Fix: After 2 corrections, /clear and rewrite the prompt.</strong></div></div>
+    </div>
+    <div class="fail">
+      <div class="fail-icon">&#x1f4d6;</div>
+      <div><div class="fail-title">Over-Specified CLAUDE.md</div><div class="fail-fix">Too long &rarr; agent ignores rules. Rules compete for tokens. <strong>Fix: Ruthlessly prune. Under 200 lines.</strong></div></div>
+    </div>
+    <div class="fail">
+      <div class="fail-icon">&#x1f3c1;</div>
+      <div><div class="fail-title">Premature Victory</div><div class="fail-fix">Agent declares "done" without testing. Plausible code, broken edge cases. <strong>Fix: 200+ testable feature checklist.</strong></div></div>
+    </div>
+    <div class="fail">
+      <div class="fail-icon">&#x1f52d;</div>
+      <div><div class="fail-title">Infinite Exploration</div><div class="fail-fix">Unscoped "investigate" fills context fast. <strong>Fix: Scope narrowly or use subagents for research.</strong></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ KEY QUOTES ═══ -->
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">In Their Words</div><div class="chapter-title">From the Research</div></div>
+  <div style="display:grid;gap:1rem">
+    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--purple)">The most successful implementations use simple, composable patterns rather than complex frameworks or specialized libraries.<span class="quote-src">Anthropic &mdash; Building Effective Agents (Dec 2024)</span></div></div></div>
+    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--green)">Context engineering represents a fundamental shift. The challenge isn't crafting the perfect prompt &mdash; it's thoughtfully curating what information enters the model's limited attention budget at each step.<span class="quote-src">Anthropic &mdash; Effective Context Engineering for AI Agents</span></div></div></div>
+    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--orange)">A clean session with a better prompt almost always outperforms a long session with accumulated corrections.<span class="quote-src">Anthropic &mdash; Best Practices for Claude Code</span></div></div></div>
+    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--accent)">The goal isn't to remove humans from the loop &mdash; it's to make human expertise count where it matters most.<span class="quote-src">Anthropic &mdash; 2026 Agentic Coding Trends Report</span></div></div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ EXAMPLE SETUP PROMPT ═══ -->
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Get Started</div><div class="chapter-title">Copy-Paste Setup Prompt</div><div class="chapter-desc">Give this prompt to any AI coding agent &mdash; Claude Code, Copilot CLI, Codex &mdash; in a fresh session on any repo. It bootstraps the full autonomous development harness in one shot.</div></div>
+  <div class="g" style="margin-bottom:1.5rem">
+    <div class="g-head"><h3>&#x1f680; The Bootstrap Prompt</h3><button onclick="copyPrompt()" id="copy-btn" style="padding:.35rem .8rem;border-radius:6px;background:var(--green-s);border:1px solid rgba(52,211,153,.2);color:var(--green);font-family:var(--mono);font-size:.7rem;font-weight:600;cursor:pointer;transition:all .2s">Copy</button></div>
+    <div class="term">
+      <div class="term-bar"><div class="term-dots"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div><span class="term-title">Paste into any AI coding agent</span></div>
+      <div class="term-body" id="bootstrap-prompt">I want to set up a fully autonomous development harness on this repo.
+Follow these principles from Anthropic's research:
+
+<span class="cmt">## Step 1: Foundation</span>
+<span class="hlt">Run /init</span> (or create a CLAUDE.md / copilot-instructions.md / AGENTS.md).
+Then audit it:
+- Remove any rule the agent would follow by default
+- Add a "Capabilities" section listing every tool, MCP server, and API available
+- Add a "Lab Notes" section for logging failures and successes
+- Keep it under 200 lines. Move extras to rules/ files
+- Add build/test/lint commands with exact syntax
+
+<span class="cmt">## Step 2: Verification Layer</span>
+Set up self-checking so I'm not the only feedback loop:
+- Create a <span class="hlt">test suite</span> the agent can run after every change
+- Add a <span class="hlt">PostToolUse hook</span> that auto-lints after file edits
+- Add a <span class="hlt">PreToolUse hook</span> that blocks: rm -rf, sudo rm, curl|bash,
+  chmod 777, git push --force, DROP TABLE, DELETE FROM
+- Create a <span class="hlt">progress.md</span> file the agent updates after each feature
+- Create an <span class="hlt">init.sh</span> that boots the dev server + runs smoke tests
+
+<span class="cmt">## Step 3: Session Hygiene</span>
+Add these conventions to the instructions file:
+- /clear between unrelated tasks (don't let context rot)
+- Use subagents for research (keep main context clean)
+- After 2 failed corrections, /clear and rewrite the prompt
+- Git commit after every working feature (natural checkpoints)
+- Update progress.md before ending any session
+
+<span class="cmt">## Step 4: Agent Separation</span>
+Set up the Writer/Reviewer pattern:
+- After implementing a feature, spawn a fresh QA agent
+- QA agent gets ONLY the changed files, no authoring context
+- QA instructions: "Read this cold. List every bug, logic error,
+  edge case, and missed requirement. Be adversarial."
+- Iterate until QA returns zero issues
+
+<span class="cmt">## Step 5: The Learning Loop</span>
+Add a meta-rule to the instructions file:
+"When you make a mistake, update Lab Notes with what not to try
+next time. When you succeed at something non-obvious, log the
+approach. Periodically run /insights and distill patterns into
+the instructions file."
+
+Show me the final instructions file and all created configs
+before committing anything. I'll review once, then you're autonomous.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ SOURCES ═══ -->
+<section class="chapter r">
+  <div class="chapter-head"><div class="chapter-num">Sources</div><div class="chapter-title">Further Reading</div></div>
+  <div class="g"><div class="g-body" style="font-size:.82rem;line-height:2.2">
+    <div style="display:grid;gap:.3rem">
+      <div><span style="color:var(--accent);font-weight:600">01</span> <span style="color:var(--muted)">&mdash;</span> Best Practices for Claude Code <span style="color:var(--dim);font-size:.7rem">(code.claude.com/docs/en/best-practices)</span></div>
+      <div><span style="color:var(--accent);font-weight:600">02</span> <span style="color:var(--muted)">&mdash;</span> Measuring AI Agent Autonomy in Practice <span style="color:var(--dim);font-size:.7rem">(anthropic.com/research)</span></div>
+      <div><span style="color:var(--accent);font-weight:600">03</span> <span style="color:var(--muted)">&mdash;</span> Framework for Safe and Trustworthy Agents <span style="color:var(--dim);font-size:.7rem">(anthropic.com/news)</span></div>
+      <div><span style="color:var(--accent);font-weight:600">04</span> <span style="color:var(--muted)">&mdash;</span> Claude Code Auto Mode &mdash; Safer Way to Skip Permissions <span style="color:var(--dim);font-size:.7rem">(anthropic.com/engineering)</span></div>
+      <div><span style="color:var(--accent);font-weight:600">05</span> <span style="color:var(--muted)">&mdash;</span> Effective Harnesses for Long-Running Agents <span style="color:var(--dim);font-size:.7rem">(anthropic.com/engineering)</span></div>
+      <div><span style="color:var(--accent);font-weight:600">06</span> <span style="color:var(--muted)">&mdash;</span> Effective Context Engineering for AI Agents <span style="color:var(--dim);font-size:.7rem">(anthropic.com/engineering)</span></div>
+      <div><span style="color:var(--accent);font-weight:600">07</span> <span style="color:var(--muted)">&mdash;</span> Building Effective Agents <span style="color:var(--dim);font-size:.7rem">(anthropic.com/research)</span></div>
+      <div><span style="color:var(--accent);font-weight:600">08</span> <span style="color:var(--muted)">&mdash;</span> 2026 Agentic Coding Trends Report <span style="color:var(--dim);font-size:.7rem">(resources.anthropic.com)</span></div>
+      <div><span style="color:var(--accent);font-weight:600">09</span> <span style="color:var(--muted)">&mdash;</span> Advanced Claude Code Reference (3-hour course notes) <span style="color:var(--dim);font-size:.7rem">(internal)</span></div>
+    </div>
+  </div></div>
+</section>
+
+<footer class="r">
+  <p>Synthesized by Claude Code &middot; Sourced from Anthropic Research &middot; Field-tested in production</p>
+  <p style="margin-top:.35rem">2026-03-30 &middot; <a href="index.html">&larr; Back to Config Refactor</a></p>
+</footer>
+
+</div></div>
+
+<script>
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('v');io.unobserve(e.target)}})},{threshold:.08,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.r').forEach(el=>io.observe(el));
+let tk=false;window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(()=>{const y=window.scrollY;document.querySelectorAll('.orb').forEach((o,i)=>{o.style.transform=`translate(${Math.sin(y*.001+i*2)*20}px,${y*(.02+i*.01)*-1}px) scale(${1+Math.sin(y*.0005)*.1})`});tk=false});tk=true}});
+function copyPrompt(){const el=document.getElementById('bootstrap-prompt');const range=document.createRange();range.selectNodeContents(el);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);const text=el.innerText;navigator.clipboard.writeText(text).then(()=>{const btn=document.getElementById('copy-btn');btn.textContent='Copied';btn.style.background='rgba(52,211,153,.15)';setTimeout(()=>{btn.textContent='Copy';btn.style.background=''},2000)});sel.removeAllRanges()}
+</script>
+</body>
+</html>

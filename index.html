@@ -236,10 +236,22 @@ footer code{color:var(--muted);font-family:var(--mono);font-size:.7rem}
 .recurse-title{font-weight:800;font-size:1.05rem;margin-bottom:.35rem;background:linear-gradient(90deg,var(--orange),var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .recurse-desc{color:var(--muted);font-size:.8rem;max-width:540px;margin:0 auto;line-height:1.6}
 .recurse-desc code{font-family:var(--mono);font-size:.72rem;color:var(--accent);padding:.05rem .25rem;background:rgba(96,165,250,.06);border-radius:3px}
+
+/* Nav tabs */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:.6rem 1.5rem;display:flex;justify-content:center;gap:.5rem;background:rgba(4,7,13,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav a{padding:.4rem 1.2rem;border-radius:8px;font-size:.78rem;font-weight:600;color:var(--muted);text-decoration:none;transition:all .2s;border:1px solid transparent}
+.nav a:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.nav a.active{color:var(--accent);background:var(--accent-s);border-color:rgba(96,165,250,.2)}
 </style>
 </head>
 <body>
 <div class="bg"><div class="bg-dots"></div><div class="bg-glow"></div><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+
+<nav class="nav">
+  <a href="index.html" class="active">Config Refactor</a>
+  <a href="principles.html">Autonomous Principles</a>
+</nav>
+
 <div class="page">
 
 <header class="hero">
