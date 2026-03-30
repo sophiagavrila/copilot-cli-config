@@ -102,6 +102,8 @@ code,.mono{font-family:var(--mono)}
 .principle .p-body{font-size:.8rem;color:var(--muted);line-height:1.6}
 .principle .p-source{font-family:var(--mono);font-size:.6rem;color:var(--dim);margin-top:.6rem;display:flex;align-items:center;gap:.35rem}
 .principle .p-source::before{content:'';width:4px;height:4px;border-radius:50%}
+.principle .p-source a{color:inherit;text-decoration:none;transition:color .2s}
+.principle .p-source a:hover{color:var(--accent)}
 .p-blue::before{background:linear-gradient(90deg,var(--accent),var(--purple))}.p-blue .p-title{color:var(--accent)}.p-blue .p-source::before{background:var(--accent)}
 .p-green::before{background:linear-gradient(90deg,var(--green),var(--cyan))}.p-green .p-title{color:var(--green)}.p-green .p-source::before{background:var(--green)}
 .p-purple::before{background:linear-gradient(90deg,var(--purple),var(--pink))}.p-purple .p-title{color:var(--purple)}.p-purple .p-source::before{background:var(--purple)}
@@ -168,6 +170,8 @@ code,.mono{font-family:var(--mono)}
 footer{text-align:center;padding:3rem 0 2rem;border-top:1px solid var(--border);margin-top:2rem}
 footer p{color:var(--dim);font-size:.75rem}
 footer a{color:var(--accent);text-decoration:none}footer a:hover{color:var(--text)}
+a.src-link{color:var(--text);text-decoration:none;border-bottom:1px solid var(--border);transition:border-color .2s,color .2s}
+a.src-link:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -240,21 +244,21 @@ footer a{color:var(--accent);text-decoration:none}footer a:hover{color:var(--tex
       <span class="p-icon">&#x2705;</span>
       <div class="p-title">Verification Is the Highest-Leverage Investment</div>
       <div class="p-body">Give agents tests, screenshots, linters, or scripts to self-check. Without verification, <strong>you</strong> are the only feedback loop. This is the single most important thing you can do.</div>
-      <div class="p-source">Anthropic &mdash; Best Practices for Claude Code</div>
+      <div class="p-source"><a href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener">Anthropic &mdash; Best Practices for Claude Code</a></div>
     </div></div>
 
     <div class="g principle p-blue"><div class="g-body"><span class="p-num">02</span>
       <span class="p-icon">&#x1f9e0;</span>
       <div class="p-title">Context Is the Fundamental Constraint</div>
       <div class="p-body">LLM performance degrades as the context window fills. Manage it aggressively: <code>/clear</code> between tasks, subagents for exploration, compact when needed, structured notes outside the window.</div>
-      <div class="p-source">Anthropic &mdash; Context Engineering for AI Agents</div>
+      <div class="p-source"><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" target="_blank" rel="noopener">Anthropic &mdash; Context Engineering for AI Agents</a></div>
     </div></div>
 
     <div class="g principle p-purple"><div class="g-body"><span class="p-num">03</span>
       <span class="p-icon">&#x1f5fa;</span>
       <div class="p-title">Explore, Plan, Then Implement</div>
       <div class="p-body">Separate research and planning from execution to avoid solving the wrong problem. Planning is most valuable when the change modifies multiple files or when you're unfamiliar with the code.</div>
-      <div class="p-source">Anthropic &mdash; Best Practices for Claude Code</div>
+      <div class="p-source"><a href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener">Anthropic &mdash; Best Practices for Claude Code</a></div>
     </div></div>
 
     <div class="g principle p-orange"><div class="g-body"><span class="p-num">04</span>
@@ -282,21 +286,21 @@ footer a{color:var(--accent);text-decoration:none}footer a:hover{color:var(--tex
       <span class="p-icon">&#x1f3af;</span>
       <div class="p-title">Trust Builds Progressively</div>
       <div class="p-body">New users approve 20% automatically. Experienced users approve 40%+. The shift is from action-by-action approval to <strong>monitoring-based oversight</strong>. Auto mode and sandboxing enable this safely.</div>
-      <div class="p-source">Anthropic &mdash; Measuring Agent Autonomy in Practice</div>
+      <div class="p-source"><a href="https://www.anthropic.com/research/measuring-agent-autonomy" target="_blank" rel="noopener">Anthropic &mdash; Measuring Agent Autonomy in Practice</a></div>
     </div></div>
 
     <div class="g principle p-blue"><div class="g-body"><span class="p-num">08</span>
       <span class="p-icon">&#x1f916;</span>
       <div class="p-title">Agents Should Self-Limit</div>
       <div class="p-body">Claude asks clarification questions more often than humans interrupt it. Self-initiated oversight is a critical safety property. The best agents recognize uncertainty rather than blindly attempting everything.</div>
-      <div class="p-source">Anthropic &mdash; Measuring Agent Autonomy in Practice</div>
+      <div class="p-source"><a href="https://www.anthropic.com/research/measuring-agent-autonomy" target="_blank" rel="noopener">Anthropic &mdash; Measuring Agent Autonomy in Practice</a></div>
     </div></div>
 
     <div class="g principle p-purple"><div class="g-body"><span class="p-num">09</span>
       <span class="p-icon">&#x1f4be;</span>
       <div class="p-title">Git Commits + Progress Files + Init Scripts</div>
       <div class="p-body">The harness pattern for long-running agents. <code>init.sh</code> prevents wasted startup time. <code>progress.txt</code> maintains state across sessions. Git commits create natural checkpoints. This prevents all four common failure modes.</div>
-      <div class="p-source">Anthropic &mdash; Effective Harnesses for Long-Running Agents</div>
+      <div class="p-source"><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Anthropic &mdash; Effective Harnesses for Long-Running Agents</a></div>
     </div></div>
 
     <div class="g principle p-orange"><div class="g-body"><span class="p-num">10</span>
@@ -317,7 +321,7 @@ footer a{color:var(--accent);text-decoration:none}footer a:hover{color:var(--tex
       <span class="p-icon">&#x1f3db;</span>
       <div class="p-title">Human Role: Orchestration, Not Implementation</div>
       <div class="p-body">The goal isn't to remove humans from the loop &mdash; it's to make human expertise count where it matters most. Define problems worth solving. Let AI handle tactical implementation. You review, direct, validate.</div>
-      <div class="p-source">Anthropic &mdash; 2026 Agentic Coding Trends Report</div>
+      <div class="p-source"><a href="https://resources.anthropic.com/hubfs/2026%20Agentic%20Coding%20Trends%20Report.pdf" target="_blank" rel="noopener">Anthropic &mdash; 2026 Agentic Coding Trends Report</a></div>
     </div></div>
 
   </div>
@@ -415,10 +419,10 @@ footer a{color:var(--accent);text-decoration:none}footer a:hover{color:var(--tex
 <section class="chapter r">
   <div class="chapter-head"><div class="chapter-num">In Their Words</div><div class="chapter-title">From the Research</div></div>
   <div style="display:grid;gap:1rem">
-    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--purple)">The most successful implementations use simple, composable patterns rather than complex frameworks or specialized libraries.<span class="quote-src">Anthropic &mdash; Building Effective Agents (Dec 2024)</span></div></div></div>
-    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--green)">Context engineering represents a fundamental shift. The challenge isn't crafting the perfect prompt &mdash; it's thoughtfully curating what information enters the model's limited attention budget at each step.<span class="quote-src">Anthropic &mdash; Effective Context Engineering for AI Agents</span></div></div></div>
-    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--orange)">A clean session with a better prompt almost always outperforms a long session with accumulated corrections.<span class="quote-src">Anthropic &mdash; Best Practices for Claude Code</span></div></div></div>
-    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--accent)">The goal isn't to remove humans from the loop &mdash; it's to make human expertise count where it matters most.<span class="quote-src">Anthropic &mdash; 2026 Agentic Coding Trends Report</span></div></div></div>
+    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--purple)">The most successful implementations use simple, composable patterns rather than complex frameworks or specialized libraries.<span class="quote-src"><a href="https://www.anthropic.com/research/building-effective-agents" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dashed var(--dim)">Anthropic &mdash; Building Effective Agents (Dec 2024)</a></span></div></div></div>
+    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--green)">Context engineering represents a fundamental shift. The challenge isn't crafting the perfect prompt &mdash; it's thoughtfully curating what information enters the model's limited attention budget at each step.<span class="quote-src"><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dashed var(--dim)">Anthropic &mdash; Effective Context Engineering for AI Agents</a></span></div></div></div>
+    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--orange)">A clean session with a better prompt almost always outperforms a long session with accumulated corrections.<span class="quote-src"><a href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dashed var(--dim)">Anthropic &mdash; Best Practices for Claude Code</a></span></div></div></div>
+    <div class="g"><div class="g-body"><div class="quote" style="border-color:var(--accent)">The goal isn't to remove humans from the loop &mdash; it's to make human expertise count where it matters most.<span class="quote-src"><a href="https://resources.anthropic.com/hubfs/2026%20Agentic%20Coding%20Trends%20Report.pdf" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dashed var(--dim)">Anthropic &mdash; 2026 Agentic Coding Trends Report</a></span></div></div></div>
   </div>
 </section>
 
@@ -488,15 +492,15 @@ before committing anything. I'll review once, then you're autonomous.</div>
   <div class="chapter-head"><div class="chapter-num">Sources</div><div class="chapter-title">Further Reading</div></div>
   <div class="g"><div class="g-body" style="font-size:.82rem;line-height:2.2">
     <div style="display:grid;gap:.3rem">
-      <div><span style="color:var(--accent);font-weight:600">01</span> <span style="color:var(--muted)">&mdash;</span> Best Practices for Claude Code <span style="color:var(--dim);font-size:.7rem">(code.claude.com/docs/en/best-practices)</span></div>
-      <div><span style="color:var(--accent);font-weight:600">02</span> <span style="color:var(--muted)">&mdash;</span> Measuring AI Agent Autonomy in Practice <span style="color:var(--dim);font-size:.7rem">(anthropic.com/research)</span></div>
-      <div><span style="color:var(--accent);font-weight:600">03</span> <span style="color:var(--muted)">&mdash;</span> Framework for Safe and Trustworthy Agents <span style="color:var(--dim);font-size:.7rem">(anthropic.com/news)</span></div>
-      <div><span style="color:var(--accent);font-weight:600">04</span> <span style="color:var(--muted)">&mdash;</span> Claude Code Auto Mode &mdash; Safer Way to Skip Permissions <span style="color:var(--dim);font-size:.7rem">(anthropic.com/engineering)</span></div>
-      <div><span style="color:var(--accent);font-weight:600">05</span> <span style="color:var(--muted)">&mdash;</span> Effective Harnesses for Long-Running Agents <span style="color:var(--dim);font-size:.7rem">(anthropic.com/engineering)</span></div>
-      <div><span style="color:var(--accent);font-weight:600">06</span> <span style="color:var(--muted)">&mdash;</span> Effective Context Engineering for AI Agents <span style="color:var(--dim);font-size:.7rem">(anthropic.com/engineering)</span></div>
-      <div><span style="color:var(--accent);font-weight:600">07</span> <span style="color:var(--muted)">&mdash;</span> Building Effective Agents <span style="color:var(--dim);font-size:.7rem">(anthropic.com/research)</span></div>
-      <div><span style="color:var(--accent);font-weight:600">08</span> <span style="color:var(--muted)">&mdash;</span> 2026 Agentic Coding Trends Report <span style="color:var(--dim);font-size:.7rem">(resources.anthropic.com)</span></div>
-      <div><span style="color:var(--accent);font-weight:600">09</span> <span style="color:var(--muted)">&mdash;</span> Advanced Claude Code Reference (3-hour course notes) <span style="color:var(--dim);font-size:.7rem">(internal)</span></div>
+      <div><span style="color:var(--accent);font-weight:600">01</span> <span style="color:var(--muted)">&mdash;</span> <a href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener" class="src-link">Best Practices for Claude Code</a></div>
+      <div><span style="color:var(--accent);font-weight:600">02</span> <span style="color:var(--muted)">&mdash;</span> <a href="https://www.anthropic.com/research/measuring-agent-autonomy" target="_blank" rel="noopener" class="src-link">Measuring AI Agent Autonomy in Practice</a></div>
+      <div><span style="color:var(--accent);font-weight:600">03</span> <span style="color:var(--muted)">&mdash;</span> <a href="https://www.anthropic.com/news/our-framework-for-developing-safe-and-trustworthy-agents" target="_blank" rel="noopener" class="src-link">Framework for Safe and Trustworthy Agents</a></div>
+      <div><span style="color:var(--accent);font-weight:600">04</span> <span style="color:var(--muted)">&mdash;</span> <a href="https://www.anthropic.com/engineering/claude-code-auto-mode" target="_blank" rel="noopener" class="src-link">Claude Code Auto Mode &mdash; Safer Way to Skip Permissions</a></div>
+      <div><span style="color:var(--accent);font-weight:600">05</span> <span style="color:var(--muted)">&mdash;</span> <a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener" class="src-link">Effective Harnesses for Long-Running Agents</a></div>
+      <div><span style="color:var(--accent);font-weight:600">06</span> <span style="color:var(--muted)">&mdash;</span> <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" target="_blank" rel="noopener" class="src-link">Effective Context Engineering for AI Agents</a></div>
+      <div><span style="color:var(--accent);font-weight:600">07</span> <span style="color:var(--muted)">&mdash;</span> <a href="https://www.anthropic.com/research/building-effective-agents" target="_blank" rel="noopener" class="src-link">Building Effective Agents</a></div>
+      <div><span style="color:var(--accent);font-weight:600">08</span> <span style="color:var(--muted)">&mdash;</span> <a href="https://resources.anthropic.com/hubfs/2026%20Agentic%20Coding%20Trends%20Report.pdf" target="_blank" rel="noopener" class="src-link">2026 Agentic Coding Trends Report</a> <span style="color:var(--dim);font-size:.65rem">PDF</span></div>
+      <div><span style="color:var(--accent);font-weight:600">09</span> <span style="color:var(--muted)">&mdash;</span> Advanced Claude Code Reference <span style="color:var(--dim);font-size:.7rem">(3-hour course notes &mdash; internal)</span></div>
     </div>
   </div></div>
 </section>
